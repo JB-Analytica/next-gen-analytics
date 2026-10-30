@@ -1,0 +1,22 @@
+# Bump revisions with `uv run pre-commit autoupdate`.
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.12.7
+    hooks:
+      - id: ruff
+        args: [--fix]
+      - id: ruff-format
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+        exclude: ^charts/fonts/OFL\.txt$  # licence text stays verbatim
+      - id: end-of-file-fixer
+      - id: check-yaml
+        # Lightdash's downloaded chart YAML uses keys check-yaml rejects.
+        exclude: ^lightdash/
+      - id: check-added-large-files
+        # dbt-metricflow's dependency tree puts uv.lock over the 500 KB default.
+        exclude: ^uv\.lock$
+      - id: check-merge-conflict
+      - id: debug-statements

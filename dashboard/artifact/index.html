@@ -1,0 +1,403 @@
+<meta name="dash-one-writer">
+<style>
+  .nk { display: flex; flex-direction: column; gap: var(--cds-gap-lg); font-family: var(--font-anthropic-sans); }
+  .nk-head h1 { font-family: var(--font-anthropic-serif); font-weight: 400; font-size: var(--cds-font-size-title); margin: 0; text-wrap: balance; }
+  .nk-head p { margin: var(--cds-gap-xs) 0 0; color: var(--color-fg-muted); font-size: var(--cds-font-size-body); max-width: 70ch; }
+  .nk-head b { font-weight: var(--cds-font-weight-medium); color: var(--color-fg); }
+  .nk-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 11rem), 1fr)); gap: var(--cds-gap-md); }
+  .nk-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr)); gap: var(--cds-gap-md); }
+  .nk-card { background: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-lg); min-width: 0; display: flex; flex-direction: column; gap: var(--cds-gap-sm); }
+  .nk-wide { grid-column: 1 / -1; }
+  .nk-card h2 { font-size: var(--cds-font-size-heading); font-weight: var(--cds-font-weight-medium); margin: 0; }
+  .nk-label { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); letter-spacing: .02em; }
+  .nk-value { font-family: var(--font-anthropic-serif); font-weight: 400; font-size: var(--cds-font-size-title); font-variant-numeric: tabular-nums; line-height: 1.1; }
+  .nk-delta { font-size: var(--cds-font-size-caption); font-variant-numeric: tabular-nums; color: var(--color-fg-muted); }
+  .nk-delta.is-good { color: var(--color-ok); }
+  .nk-delta.is-bad { color: var(--color-bad); }
+  .nk-note { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); margin: 0; }
+  .nk-chart { position: relative; min-height: 260px; }
+  .nk-chart svg { display: block; overflow: visible; }
+  .nk-legend { display: flex; flex-wrap: wrap; gap: var(--cds-gap-sm) var(--cds-gap-md); font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); min-height: 1.2em; }
+  .nk-legend span { display: inline-flex; align-items: center; gap: .35rem; }
+  .nk-legend i { display: inline-block; width: .6rem; height: .6rem; border-radius: 2px; }
+  .nk-tip { position: absolute; pointer-events: none; background: var(--cds-surface-popover); border: 1px solid var(--cds-border); border-radius: var(--cds-radius); box-shadow: var(--cds-shadow-popover); padding: var(--cds-pad-xs) var(--cds-pad-sm); font-size: var(--cds-font-size-caption); font-variant-numeric: tabular-nums; white-space: nowrap; z-index: 2; }
+  .nk-tip .nk-tip-head { color: var(--cds-text-secondary); }
+  .nk-scroll { overflow-x: auto; }
+  .nk-table { width: 100%; border-collapse: collapse; font-size: var(--cds-font-size-body); font-variant-numeric: tabular-nums; }
+  .nk-table th, .nk-table td { text-align: right; padding: var(--cds-pad-xs) var(--cds-pad-sm); border-bottom: 1px solid var(--color-border-line); white-space: nowrap; }
+  .nk-table th:first-child, .nk-table td:first-child { text-align: left; padding-left: 0; }
+  .nk-table th { font-weight: var(--cds-font-weight-medium); color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); }
+  .nk-bar { display: inline-block; height: .55rem; border-radius: 2px; background: var(--cds-chart-muted); vertical-align: middle; margin-right: .4rem; }
+  .nk-bar.is-accent { background: var(--nk-accent, currentColor); }
+  [data-dash-source-state=empty] { color: transparent; }
+  [data-dash-source-state=refreshing] { opacity: .5; transition: opacity var(--cds-dur-slow); }
+</style>
+
+<div class="nk">
+  <header class="nk-head" id="summary">
+    <h1>Noordkust KPIs</h1>
+    <p>Realised revenue in <b data-draw="q_label" data-source="kpi_latest" data-field="quarter_label">—</b> was <b data-draw="head_rev" data-source="kpi_latest" data-field="realised_revenue_eur">—</b>, <b data-draw="head_rev_chg" data-source="kpi_latest" data-field="realised_revenue_eur_change">—</b> on the quarter before. Every figure is a governed dbt MetricFlow metric over synthetic shop data, as of 1 October 2026.</p>
+  </header>
+
+  <section class="nk-tiles" id="kpis" aria-label="Headline KPIs, latest quarter">
+    <div class="nk-card" id="kpi-revenue">
+      <span class="nk-label">Realised revenue</span>
+      <span class="nk-value" data-draw="t_rev" data-source="kpi_latest" data-field="realised_revenue_eur">—</span>
+      <span class="nk-delta" data-draw="t_rev_chg" data-source="kpi_latest" data-field="realised_revenue_eur_change">—</span>
+      <span class="nk-note">Not cancelled, returned lines removed, shipping excluded</span>
+    </div>
+    <div class="nk-card" id="kpi-orders">
+      <span class="nk-label">Orders</span>
+      <span class="nk-value" data-draw="t_ord" data-source="kpi_latest" data-field="orders">—</span>
+      <span class="nk-delta" data-draw="t_ord_chg" data-source="kpi_latest" data-field="orders_change">—</span>
+      <span class="nk-note">Orders placed and not cancelled</span>
+    </div>
+    <div class="nk-card" id="kpi-aov">
+      <span class="nk-label">Average order value</span>
+      <span class="nk-value" data-draw="t_aov" data-source="kpi_latest" data-field="average_order_value_eur">—</span>
+      <span class="nk-delta" data-draw="t_aov_chg" data-source="kpi_latest" data-field="average_order_value_eur_change">—</span>
+      <span class="nk-note">Realised revenue per order</span>
+    </div>
+    <div class="nk-card" id="kpi-returns">
+      <span class="nk-label">Return rate</span>
+      <span class="nk-value" data-draw="t_ret" data-source="kpi_latest" data-field="return_rate">—</span>
+      <span class="nk-delta" data-draw="t_ret_chg" data-source="kpi_latest" data-field="return_rate_change">—</span>
+      <span class="nk-note">Units returned per unit sold, by order date</span>
+    </div>
+  </section>
+
+  <section class="nk-grid" aria-label="Breakdowns">
+    <div class="nk-card nk-wide" id="revenue-by-month">
+      <h2>Realised revenue by month and shipping country</h2>
+      <p class="nk-note">Monthly totals, stacked by the country the order shipped to.</p>
+      <div class="nk-legend" data-draw="rev_legend" data-source="revenue_monthly_country"></div>
+      <div class="nk-chart dash-skeleton" data-draw="rev_chart" data-source="revenue_monthly_country"></div>
+    </div>
+
+    <div class="nk-card" id="category-mix">
+      <h2>Revenue by category</h2>
+      <p class="nk-note">The last four quarters, with each category's share of the total.</p>
+      <div class="nk-scroll">
+        <table class="nk-table" data-source="category_year" data-row-key="product__category">
+          <thead>
+            <tr>
+              <th scope="col" data-field="product__category">Category</th>
+              <th scope="col" data-field="line_revenue_eur">Revenue</th>
+              <th scope="col" data-field="share">Share</th>
+            </tr>
+          </thead>
+          <tbody data-draw="cat_rows"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="nk-card" id="rain-gear">
+      <h2>Does rain sell rain gear?</h2>
+      <p class="nk-note">Rain gear revenue per day, dry days against rainy days (1 mm of rain or more in the country's reference city). If rain sold rain gear, the rainy-day dot would sit to the right.</p>
+      <div class="nk-legend">
+        <span><i data-draw="sw_dry"></i>Dry day</span>
+        <span><i data-draw="sw_rainy"></i>Rainy day</span>
+      </div>
+      <div class="nk-chart dash-skeleton" data-draw="rain_chart" data-source="weather_by_country"></div>
+    </div>
+
+    <div class="nk-card nk-wide" id="weather-table">
+      <h2>Weather and revenue by country</h2>
+      <p class="nk-note">Revenue per day on rainy and dry days, all categories and rain gear alone.</p>
+      <div class="nk-scroll">
+        <table class="nk-table" data-source="weather_by_country" data-row-key="country_day__country">
+          <thead>
+            <tr>
+              <th scope="col" data-field="country_day__country">Country</th>
+              <th scope="col" data-field="rainy_day_share">Rainy days</th>
+              <th scope="col" data-field="revenue_per_rainy_day_eur">Revenue per rainy day</th>
+              <th scope="col" data-field="revenue_per_dry_day_eur">Revenue per dry day</th>
+              <th scope="col" data-field="rain_gear_revenue_per_rainy_day_eur">Rain gear per rainy day</th>
+              <th scope="col" data-field="rain_gear_revenue_per_dry_day_eur">Rain gear per dry day</th>
+            </tr>
+          </thead>
+          <tbody data-draw="weather_rows"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+  // MotherDuck's query tool answers {success, columns, columnTypes, rows: [[...]]}. Pair each row's
+  // cells with the column names, and make number columns numbers (a HUGEINT comes back as text).
+  for (const id of ['kpi_quarterly', 'revenue_monthly_country', 'category_quarterly', 'weather_by_country']) {
+    dash.loader(id, {
+      description: 'MotherDuck’s answer as rows, number columns typed from its column types',
+      fn: ({ answer }) => {
+        const a = typeof answer === 'string' ? JSON.parse(answer) : answer;
+        if (!a || a.success === false || !Array.isArray(a.rows)) {
+          throw new Error((a && (a.error || a.message)) || 'MotherDuck returned no rows');
+        }
+        const numeric = /^(TINYINT|SMALLINT|INTEGER|BIGINT|HUGEINT|UTINYINT|USMALLINT|UINTEGER|UBIGINT|UHUGEINT|FLOAT|REAL|DOUBLE|DECIMAL)/;
+        const isNumber = a.columns.map((_, i) => numeric.test((a.columnTypes && a.columnTypes[i]) || ''));
+        return {
+          columns: a.columns,
+          rows: a.rows.map((r) => Object.fromEntries(r.map((v, i) => [a.columns[i], v !== null && isNumber[i] ? Number(v) : v]))),
+        };
+      },
+    });
+  }
+</script>
+
+<script>
+  // Shared formatting and the two calculations.
+  window.nk = {
+    eurCompact: (v) => '€' + new Intl.NumberFormat('en', { notation: 'compact', maximumFractionDigits: 1 }).format(v),
+    eur: (v) => '€' + d3.format(',.0f')(v),
+    count: d3.format(','),
+    pct: d3.format('.1%'),
+    signedPct: d3.format('+.1%'),
+    countries: { BE: 'Belgium', NL: 'Netherlands', DE: 'Germany', GB: 'United Kingdom', CH: 'Switzerland' },
+    categories: { rain_gear: 'Rain gear', cycling_apparel: 'Cycling apparel', bike_parts: 'Bike parts', camping: 'Camping', footwear: 'Footwear' },
+    rows: (id) => { const r = dash.data(id); return r.status === 'ok' ? r.data : null; },
+  };
+
+  dash.calc('kpi_latest', {
+    title: 'Latest quarter vs the one before',
+    description: 'The last quarter of the headline KPIs, with each metric’s change on the quarter before (return rate in percentage points).',
+    inputs: ['kpi_quarterly'],
+    fn: (kpi_quarterly) => {
+      const q = [...kpi_quarterly].sort((a, b) => (a.metric_time__quarter < b.metric_time__quarter ? -1 : 1));
+      if (q.length < 2) return [];
+      const cur = q[q.length - 1];
+      const prev = q[q.length - 2];
+      const month = Number(cur.metric_time__quarter.slice(5, 7));
+      const change = (k) => (cur[k] - prev[k]) / prev[k];
+      return [{
+        quarter: cur.metric_time__quarter,
+        quarter_label: 'Q' + Math.ceil(month / 3) + ' ' + cur.metric_time__quarter.slice(0, 4),
+        realised_revenue_eur: cur.realised_revenue_eur,
+        orders: cur.orders,
+        average_order_value_eur: cur.average_order_value_eur,
+        return_rate: cur.return_rate,
+        realised_revenue_eur_change: change('realised_revenue_eur'),
+        orders_change: change('orders'),
+        average_order_value_eur_change: change('average_order_value_eur'),
+        return_rate_change: cur.return_rate - prev.return_rate,
+      }];
+    },
+  });
+
+  dash.calc('category_year', {
+    title: 'Category revenue, last four quarters',
+    description: 'Revenue per category summed over all quarters exported, with its share of the total.',
+    inputs: ['category_quarterly'],
+    fn: (category_quarterly) => {
+      const total = category_quarterly.reduce((s, r) => s + r.line_revenue_eur, 0);
+      const by = new Map();
+      for (const r of category_quarterly) by.set(r.product__category, (by.get(r.product__category) ?? 0) + r.line_revenue_eur);
+      return [...by].map(([product__category, line_revenue_eur]) => ({ product__category, line_revenue_eur, share: line_revenue_eur / total }))
+        .sort((a, b) => b.line_revenue_eur - a.line_revenue_eur);
+    },
+  });
+</script>
+
+<script>
+  // Header and tiles.
+  const latest = () => { const r = window.nk.rows('kpi_latest'); return r && r.length ? r[0] : null; };
+  const text = (name, field, fmt) => dash.draw(name, (el) => { const r = latest(); el.textContent = r ? fmt(r[field]) : '—'; });
+  // goodWhenUp: whether a rise is good news (it is not for the return rate).
+  const delta = (name, field, fmt, goodWhenUp) => dash.draw(name, (el) => {
+    const r = latest();
+    el.classList.remove('is-good', 'is-bad');
+    if (!r) { el.textContent = '—'; return; }
+    const v = r[field];
+    el.textContent = fmt(v) + ' on the quarter before';
+    if (v !== 0) el.classList.add((v > 0) === goodWhenUp ? 'is-good' : 'is-bad');
+  });
+  const pp = (v) => (v >= 0 ? '+' : '−') + Math.abs(v * 100).toFixed(1) + ' pp';
+
+  text('q_label', 'quarter_label', (v) => v);
+  text('head_rev', 'realised_revenue_eur', window.nk.eur);
+  dash.draw('head_rev_chg', (el) => {
+    const r = latest();
+    if (!r) { el.textContent = '—'; return; }
+    const v = r.realised_revenue_eur_change;
+    el.textContent = (v >= 0 ? 'up ' : 'down ') + d3.format('.1%')(Math.abs(v));
+  });
+  text('t_rev', 'realised_revenue_eur', window.nk.eurCompact);
+  text('t_ord', 'orders', window.nk.count);
+  text('t_aov', 'average_order_value_eur', (v) => '€' + d3.format(',.2f')(v));
+  text('t_ret', 'return_rate', window.nk.pct);
+  delta('t_rev_chg', 'realised_revenue_eur_change', window.nk.signedPct, true);
+  delta('t_ord_chg', 'orders_change', window.nk.signedPct, true);
+  delta('t_aov_chg', 'average_order_value_eur_change', window.nk.signedPct, true);
+  delta('t_ret_chg', 'return_rate_change', pp, false);
+</script>
+
+<script>
+  // Revenue by month, stacked by shipping country.
+  const countryOrder = (rows) => d3.groups(rows, (d) => d.order__shipping_country)
+    .map(([c, rs]) => [c, d3.sum(rs, (d) => d.realised_revenue_eur)])
+    .sort((a, b) => b[1] - a[1]).map(([c]) => c);
+
+  dash.draw('rev_legend', (el) => {
+    const rows = window.nk.rows('revenue_monthly_country');
+    if (!rows) { el.replaceChildren(); return; }
+    el.replaceChildren(...countryOrder(rows).map((c, i) => {
+      const s = document.createElement('span');
+      const sw = document.createElement('i');
+      sw.style.background = dash.colors[i % dash.colors.length];
+      s.append(sw, document.createTextNode(window.nk.countries[c] ?? c));
+      return s;
+    }));
+  });
+
+  dash.draw('rev_chart', (el) => {
+    const rows = window.nk.rows('revenue_monthly_country');
+    el.replaceChildren();
+    if (!rows) return;
+    el.classList.remove('dash-skeleton');
+    const countries = countryOrder(rows);
+    const months = [...new Set(rows.map((d) => d.metric_time__month))].sort();
+    const wide = months.map((m) => {
+      const o = { month: m };
+      for (const c of countries) o[c] = 0;
+      for (const d of rows) if (d.metric_time__month === m) o[d.order__shipping_country] = d.realised_revenue_eur;
+      return o;
+    });
+    const series = d3.stack().keys(countries)(wide);
+    const W = el.clientWidth || 600;
+    const H = 260;
+    const y = d3.scaleLinear([0, d3.max(series.at(-1), (d) => d[1])], [H - 24, 8]).nice();
+    const svg = d3.select(el).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`).attr('height', H);
+    const yAxis = svg.append('g').call(d3.axisLeft(y).ticks(5).tickFormat(window.nk.eurCompact).tickSize(0))
+      .attr('font-size', null).attr('font-family', null);
+    yAxis.select('.domain').remove();
+    yAxis.selectAll('text').attr('fill', 'var(--color-fg-muted)').style('font-size', 'var(--cds-font-size-caption)');
+    let left = 0;
+    yAxis.selectAll('text').each(function () { left = Math.max(left, this.getComputedTextLength()); });
+    left += 10;
+    yAxis.attr('transform', `translate(${left - 4},0)`);
+    const x = d3.scaleBand(months, [left, W - 4]).padding(0.25);
+    svg.insert('g', ':first-child').selectAll('line').data(y.ticks(5)).join('line')
+      .attr('x1', left).attr('x2', W - 4).attr('y1', (d) => y(d)).attr('y2', (d) => y(d))
+      .attr('stroke', 'var(--cds-chart-grid)').attr('stroke-width', 1);
+    const fmtMonth = (m) => d3.utcFormat('%b %Y')(new Date(m + 'T00:00:00Z'));
+    const step = Math.ceil(months.length / Math.max(1, Math.floor((W - left) / 64)));
+    const xAxis = svg.append('g').attr('transform', `translate(0,${H - 24})`)
+      .call(d3.axisBottom(x).tickValues(months.filter((_, i) => i % step === 0)).tickFormat((m) => d3.utcFormat('%b %y')(new Date(m + 'T00:00:00Z'))).tickSize(0).tickPadding(8))
+      .attr('font-size', null).attr('font-family', null);
+    xAxis.select('.domain').attr('stroke', 'var(--cds-chart-axis)');
+    xAxis.selectAll('text').attr('fill', 'var(--color-fg-muted)').style('font-size', 'var(--cds-font-size-caption)');
+    const tip = d3.select(el).append('div').attr('class', 'nk-tip').attr('hidden', '');
+    svg.append('g').selectAll('g').data(series).join('g').attr('fill', (_, i) => dash.colors[i % dash.colors.length])
+      .selectAll('rect').data((s) => s.map((d) => Object.assign(d, { key: s.key }))).join('rect')
+      .attr('x', (d) => x(d.data.month)).attr('width', x.bandwidth())
+      .attr('y', (d) => y(d[1])).attr('height', (d) => Math.max(0, y(d[0]) - y(d[1])))
+      .on('pointermove', (event, d) => {
+        const [px, py] = d3.pointer(event, el);
+        tip.attr('hidden', null).html('');
+        tip.append('div').attr('class', 'nk-tip-head').text(fmtMonth(d.data.month));
+        tip.append('div').text(`${window.nk.countries[d.key] ?? d.key}: ${window.nk.eur(d[1] - d[0])}`);
+        tip.append('div').text(`All countries: ${window.nk.eur(d3.sum(countries, (c) => d.data[c]))}`);
+        const tw = tip.node().offsetWidth;
+        tip.style('left', `${Math.min(Math.max(0, px + 12), W - tw)}px`).style('top', `${Math.max(0, py - 48)}px`);
+      })
+      .on('pointerleave', () => tip.attr('hidden', ''));
+  });
+</script>
+
+<script>
+  // Category table.
+  dash.draw('cat_rows', (el) => {
+    const rows = window.nk.rows('category_year');
+    if (!rows) { el.replaceChildren(); return; }
+    const max = d3.max(rows, (d) => d.share) || 1;
+    el.replaceChildren(...rows.map((d) => {
+      const tr = document.createElement('tr');
+      tr.dataset.key = d.product__category;
+      const name = document.createElement('td');
+      name.textContent = window.nk.categories[d.product__category] ?? d.product__category;
+      const rev = document.createElement('td');
+      rev.textContent = window.nk.eur(d.line_revenue_eur);
+      const share = document.createElement('td');
+      const bar = document.createElement('span');
+      bar.className = 'nk-bar' + (d.product__category === 'rain_gear' ? ' is-accent' : '');
+      bar.style.width = `${(d.share / max) * 3.5}rem`;
+      if (d.product__category === 'rain_gear') bar.style.setProperty('--nk-accent', dash.colors[0]);
+      share.append(bar, document.createTextNode(window.nk.pct(d.share)));
+      tr.append(name, rev, share);
+      return tr;
+    }));
+  });
+</script>
+
+<script>
+  // Rain gear per day, dry vs rainy, as a dumbbell per country; and the weather table.
+  dash.draw('sw_dry', (el) => { el.style.background = 'var(--cds-chart-muted)'; });
+  dash.draw('sw_rainy', (el) => { el.style.background = dash.colors[0]; });
+
+  dash.draw('rain_chart', (el) => {
+    const rows = window.nk.rows('weather_by_country');
+    el.replaceChildren();
+    if (!rows) return;
+    el.classList.remove('dash-skeleton');
+    const data = [...rows].sort((a, b) => b.rain_gear_revenue_per_dry_day_eur - a.rain_gear_revenue_per_dry_day_eur);
+    const W = el.clientWidth || 400;
+    const rowH = 40;
+    const H = data.length * rowH + 28;
+    const svg = d3.select(el).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`).attr('height', H);
+    const labels = svg.append('g');
+    labels.selectAll('text').data(data).join('text')
+      .attr('y', (_, i) => i * rowH + rowH / 2).attr('dy', '0.35em')
+      .attr('fill', 'var(--color-fg)').style('font-size', 'var(--cds-font-size-caption)')
+      .text((d) => window.nk.countries[d.country_day__country] ?? d.country_day__country);
+    let left = 0;
+    labels.selectAll('text').each(function () { left = Math.max(left, this.getComputedTextLength()); });
+    left += 14;
+    const maxV = d3.max(data, (d) => Math.max(d.rain_gear_revenue_per_dry_day_eur, d.rain_gear_revenue_per_rainy_day_eur));
+    const x = d3.scaleLinear([0, maxV], [left, W - 12]).nice();
+    const xAxis = svg.append('g').attr('transform', `translate(0,${data.length * rowH + 4})`)
+      .call(d3.axisBottom(x).ticks(Math.max(2, Math.floor((W - left) / 80))).tickFormat(window.nk.eurCompact).tickSize(0).tickPadding(6))
+      .attr('font-size', null).attr('font-family', null);
+    xAxis.select('.domain').remove();
+    xAxis.selectAll('text').attr('fill', 'var(--color-fg-muted)').style('font-size', 'var(--cds-font-size-caption)');
+    svg.insert('g', ':first-child').selectAll('line').data(x.ticks(Math.max(2, Math.floor((W - left) / 80)))).join('line')
+      .attr('x1', (d) => x(d)).attr('x2', (d) => x(d)).attr('y1', 4).attr('y2', data.length * rowH)
+      .attr('stroke', 'var(--cds-chart-grid)');
+    const tip = d3.select(el).append('div').attr('class', 'nk-tip').attr('hidden', '');
+    const g = svg.append('g').selectAll('g').data(data).join('g').attr('transform', (_, i) => `translate(0,${i * rowH + rowH / 2})`);
+    g.append('line').attr('x1', (d) => x(d.rain_gear_revenue_per_dry_day_eur)).attr('x2', (d) => x(d.rain_gear_revenue_per_rainy_day_eur))
+      .attr('stroke', 'var(--cds-chart-axis)').attr('stroke-width', 2).attr('stroke-linecap', 'round');
+    g.append('circle').attr('cx', (d) => x(d.rain_gear_revenue_per_dry_day_eur)).attr('r', 6).attr('fill', 'var(--cds-chart-muted)');
+    g.append('circle').attr('cx', (d) => x(d.rain_gear_revenue_per_rainy_day_eur)).attr('r', 6).attr('fill', dash.colors[0]);
+    g.append('rect').attr('x', left).attr('y', -rowH / 2).attr('width', W - left).attr('height', rowH).attr('fill', 'transparent')
+      .on('pointermove', (event, d) => {
+        const [px, py] = d3.pointer(event, el);
+        tip.attr('hidden', null).html('');
+        tip.append('div').attr('class', 'nk-tip-head').text(window.nk.countries[d.country_day__country] ?? d.country_day__country);
+        tip.append('div').text(`Rainy day: ${window.nk.eur(d.rain_gear_revenue_per_rainy_day_eur)}`);
+        tip.append('div').text(`Dry day: ${window.nk.eur(d.rain_gear_revenue_per_dry_day_eur)}`);
+        const tw = tip.node().offsetWidth;
+        tip.style('left', `${Math.min(Math.max(0, px + 12), W - tw)}px`).style('top', `${Math.max(0, py - 52)}px`);
+      })
+      .on('pointerleave', () => tip.attr('hidden', ''));
+  });
+
+  dash.draw('weather_rows', (el) => {
+    const rows = window.nk.rows('weather_by_country');
+    if (!rows) { el.replaceChildren(); return; }
+    const data = [...rows].sort((a, b) => b.revenue_per_dry_day_eur - a.revenue_per_dry_day_eur);
+    el.replaceChildren(...data.map((d) => {
+      const tr = document.createElement('tr');
+      tr.dataset.key = d.country_day__country;
+      const cells = [
+        window.nk.countries[d.country_day__country] ?? d.country_day__country,
+        window.nk.pct(d.rainy_day_share),
+        window.nk.eur(d.revenue_per_rainy_day_eur),
+        window.nk.eur(d.revenue_per_dry_day_eur),
+        window.nk.eur(d.rain_gear_revenue_per_rainy_day_eur),
+        window.nk.eur(d.rain_gear_revenue_per_dry_day_eur),
+      ];
+      tr.append(...cells.map((c) => { const td = document.createElement('td'); td.textContent = c; return td; }));
+      return tr;
+    }));
+  });
+</script>

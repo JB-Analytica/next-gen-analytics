@@ -1,0 +1,130 @@
+// The operational database of Noordkust Outdoor, a fictitious Benelux direct-to-consumer
+// outdoor and cycling gear webshop that also ships to Germany, the United Kingdom and
+// Switzerland.
+//
+// This file is the *only* description of the source system. model2data turns it into
+// relationship-preserving synthetic data; nothing downstream (dlt, dbt, the dashboard) knows or
+// cares that the data is synthetic. Replace the generated DuckDB file with a real database
+// connection and the rest of the stack is unchanged.
+//
+// Two things model2data cannot express are applied afterwards by `nga.generate.align_source`:
+// an order's currency, shipping country and money columns follow the customer's country and
+// the order's items; an item is created when its order is placed; a line is returned at most
+// once, only from a delivered order, a few days after delivery. Those dates are not left to a
+// cross-table "after" hint: model2data draws the child's date first and then only parents
+// older than it qualify, which piles the items onto the earliest orders. The columns below carry placeholders for them.
+
+Project noordkust {
+  database_type: 'PostgreSQL'
+  Note: 'Order-management database of a Benelux outdoor and cycling gear webshop'
+}
+
+Enum country_code {
+  BE
+  NL
+  DE
+  GB
+  CH
+}
+
+Enum currency_code {
+  EUR
+  GBP
+  CHF
+}
+
+Enum product_category {
+  rain_gear
+  cycling_apparel
+  bike_parts
+  camping
+  footwear
+}
+
+Enum order_status {
+  pending
+  paid
+  shipped
+  delivered
+  cancelled
+}
+
+Enum return_reason {
+  wrong_size
+  not_as_described
+  defective
+  changed_mind
+  arrived_late
+}
+
+Table customers {
+  id int [pk]
+  first_name varchar [not null]
+  last_name varchar [not null]
+  email varchar [not null, unique]
+  country country_code [not null, note: '{"weights": {"BE": 10, "NL": 8, "DE": 2, "GB": 1, "CH": 1}}']
+  city varchar [not null]
+  is_marketing_opt_in boolean [not null, default: false, note: '{"true_rate": 0.4}']
+  created_at timestamp [not null, note: '{"growth": 0.5}']
+  updated_at timestamp [not null]
+
+  Note: 'One row per registered customer account; created_at is the signup moment'
+}
+
+Table products {
+  id int [pk]
+  sku ean13 [not null, unique]
+  name word [not null]
+  category product_category [not null, note: '{"weights": {"cycling_apparel": 4, "rain_gear": 3, "bike_parts": 3, "camping": 2, "footwear": 2}}']
+  list_price_cents int [not null, note: '{"min": 799, "max": 35000, "distribution": "lognormal", "median": 4500, "spread": 0.6}']
+  is_active boolean [not null, default: true, note: '{"true_rate": 0.9}']
+  created_at timestamp [not null]
+  updated_at timestamp [not null]
+
+  Note: 'The catalogue: one row per sellable product; list_price_cents is in euro cents'
+}
+
+Table orders {
+  id int [pk]
+  customer_id int [not null, ref: > customers.id, note: '{"skew": 0.7}']
+  status order_status [not null, default: 'pending', note: '{"weights": {"delivered": 16, "shipped": 2, "paid": 2, "pending": 1, "cancelled": 2}}']
+  currency currency_code [not null, note: 'Placeholder: set from the customer country by align_source']
+  subtotal_minor int [not null, note: 'Placeholder: sum of the items, set by align_source']
+  shipping_minor int [not null, note: 'Placeholder: flat fee per currency, set by align_source']
+  total_minor int [not null, note: 'Placeholder: subtotal plus shipping, set by align_source']
+  shipping_country country_code [not null, note: 'Placeholder: the customer country, set by align_source']
+  ordered_at timestamp [not null, note: '{"after": "customers.created_at", "business_hours": true, "growth": 0.5, "seasonality": 0.4}']
+  shipped_at timestamp [note: '{"after": "ordered_at", "when": {"status": ["shipped", "delivered"]}}']
+  delivered_at timestamp [note: '{"after": "shipped_at", "when": {"status": ["delivered"]}}']
+  created_at timestamp [not null]
+  updated_at timestamp [not null]
+
+  Note: 'One row per order; amounts are integer minor units (cents, pence, rappen) in the order currency'
+}
+
+Table order_items {
+  id int [pk]
+  order_id int [not null, ref: > orders.id, note: '{"skew": 0}']
+  product_id int [not null, ref: > products.id, note: '{"skew": 0.6}']
+  quantity int [not null, note: '{"min": 1, "max": 5, "distribution": "exponential", "mean": 1.4}']
+  unit_price_minor int [not null, note: 'Placeholder: the product list price in the order currency, set by align_source']
+  discount_minor int [not null, default: 0, note: '{"min": 0, "max": 2500, "distribution": "exponential", "mean": 250}']
+  created_at timestamp [not null, note: 'Placeholder: the order moment, set by align_source']
+
+  indexes {
+    (order_id, product_id) [unique]
+  }
+
+  Note: 'One row per product line on an order; amounts are integer minor units in the order currency'
+}
+
+Table returns {
+  id int [pk]
+  order_item_id int [not null, ref: > order_items.id, note: '{"skew": 0}']
+  reason return_reason [not null, note: '{"weights": {"wrong_size": 8, "changed_mind": 4, "not_as_described": 3, "defective": 2, "arrived_late": 1}}']
+  returned_at timestamp [not null, note: 'Placeholder: a few days after delivery, set by align_source']
+  created_at timestamp [not null]
+  updated_at timestamp [not null]
+
+  Note: 'One row per returned order line; the whole line comes back'
+}

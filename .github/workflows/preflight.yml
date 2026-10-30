@@ -1,0 +1,20 @@
+# Warehouse-free check of every pull request that touches the dbt project.
+# See https://github.com/JB-Analytica/dbt-preflight
+#
+# Manual only for now: preflight fixtures the shop from source_system/noordkust.dbml but has no
+# DBML for the three API sources (openmeteo, frankfurter, nagerdate), so their staging models and
+# everything downstream fail. Restore `pull_request:` once those sources are described too.
+name: dbt preflight
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  preflight:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: JB-Analytica/dbt-preflight@v0

@@ -1,0 +1,43 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  checks:
+    name: Lint, types, tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.0.1
+        with:
+          enable-cache: true
+      - run: uv sync --all-extras
+      - run: uv run ruff check .
+      - run: uv run ruff format --check .
+      - run: uv run ty check nga
+      - run: uv run pytest
+
+  # dbt runs against a local DuckDB file, so it needs no secret: `nga run` generates the
+  # synthetic shop, loads all four sources with dlt (the weather, exchange-rate and holiday APIs
+  # are public) and runs `dbt build`. MetricFlow then validates the metric definitions.
+  # Anything that does need a secret (MotherDuck) belongs in a separate job gated on the secret.
+  dbt:
+    name: dbt build and MetricFlow validation (local DuckDB)
+    runs-on: ubuntu-latest
+    needs: checks
+    timeout-minutes: 20
+    env:
+      NGA_DESTINATION: duckdb
+      DBT_TARGET: dev
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.0.1
+        with:
+          enable-cache: true
+      - run: uv sync
+      - run: uv run nga run
+      - run: uv run nga transform source freshness
+      - run: uv run nga metrics validate-configs

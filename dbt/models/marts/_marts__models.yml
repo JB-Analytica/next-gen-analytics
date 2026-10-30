@@ -1,0 +1,466 @@
+version: 2
+
+# The marts layer is the contract with the business, and the only layer the dashboard and
+# MetricFlow read (dbt_project.yml tags this folder `bi`). Every column declares its data_type,
+# so the contract is explicit in the YAML rather than inferred from the warehouse.
+#
+# Money: euros everywhere in this layer. Sources hold integer minor units in the order's own
+# currency (EUR, GBP, CHF); each order is converted once with the ECB rate of the latest
+# business day on or before the order date.
+#
+# Revenue words, used consistently in every description below:
+#   booked   = the order as placed, cancelled orders and returned lines included.
+#   realised = booked minus cancelled orders and minus returned lines. This is "revenue".
+# Revenue excludes shipping fees, which are carried separately.
+
+models:
+  - name: dim_customers
+    description: One row per customer, with lifetime order history.
+    columns:
+      - name: customer_id
+        description: Primary key. One row per customer.
+        data_type: bigint
+        data_tests: [unique, not_null]
+      - name: first_name
+        description: Customer's first name.
+        data_type: varchar
+      - name: last_name
+        description: Customer's last name.
+        data_type: varchar
+      - name: email
+        description: Customer's email address (synthetic).
+        data_type: varchar
+      - name: country_code
+        description: Country the customer lives in (BE, NL, DE, GB, CH). Decides the order currency.
+        data_type: varchar
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [BE, NL, DE, GB, CH]
+      - name: city
+        description: Customer's city.
+        data_type: varchar
+      - name: is_marketing_opt_in
+        description: True when the customer agreed to marketing messages.
+        data_type: boolean
+      - name: created_at
+        description: When the customer account was created.
+        data_type: timestamp
+      - name: created_date
+        description: Date the customer account was created; the day they count as a new customer.
+        data_type: date
+      - name: lifetime_orders
+        description: Orders the customer placed that were not cancelled.
+        data_type: bigint
+      - name: lifetime_realised_net_revenue_eur
+        description: >
+          Realised revenue in euros over all the customer's orders (not cancelled, lines not
+          returned, shipping excluded).
+        data_type: double
+      - name: first_order_date
+        description: Date of the customer's first order; null for customers who never ordered.
+        data_type: date
+      - name: last_order_date
+        description: Date of the customer's latest order; null for customers who never ordered.
+        data_type: date
+
+  - name: dim_products
+    description: One row per product in the catalogue.
+    columns:
+      - name: product_id
+        description: Primary key. One row per product.
+        data_type: bigint
+        data_tests: [unique, not_null]
+      - name: sku
+        description: Stock keeping unit (barcode).
+        data_type: varchar
+      - name: product_name
+        description: Product name shown to customers.
+        data_type: varchar
+      - name: category
+        description: Product category.
+        data_type: varchar
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [rain_gear, cycling_apparel, bike_parts, camping, footwear]
+      - name: list_price_eur
+        description: List price in euros (the catalogue price orders in other currencies convert from).
+        data_type: double
+      - name: is_active
+        description: True when the product is still on sale.
+        data_type: boolean
+      - name: created_at
+        description: When the product was added to the catalogue.
+        data_type: timestamp
+
+  - name: dim_date
+    description: One row per calendar day across the data window (orders and weather).
+    columns:
+      - name: date_day
+        description: Primary key. The calendar day.
+        data_type: date
+        data_tests: [unique, not_null]
+      - name: year_number
+        description: Calendar year.
+        data_type: bigint
+      - name: quarter_number
+        description: Calendar quarter, 1 to 4.
+        data_type: bigint
+      - name: month_number
+        description: Calendar month, 1 to 12.
+        data_type: bigint
+      - name: month_start_date
+        description: First day of the month the day falls in.
+        data_type: date
+      - name: week_start_date
+        description: Monday of the week the day falls in.
+        data_type: date
+      - name: day_name
+        description: Name of the weekday.
+        data_type: varchar
+      - name: iso_day_of_week
+        description: ISO weekday, 1 (Monday) to 7 (Sunday).
+        data_type: bigint
+      - name: is_weekend
+        description: True on Saturday and Sunday.
+        data_type: boolean
+
+  - name: fct_orders
+    description: >
+      One row per order, with its money rolled up from the lines, converted to euros, and its
+      fulfilment timeline. The grain every revenue and order-volume question is answered at.
+    columns:
+      - name: order_id
+        description: Primary key. One row per order.
+        data_type: bigint
+        data_tests: [unique, not_null]
+      - name: customer_id
+        description: The customer who placed the order.
+        data_type: bigint
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_customers')
+                field: customer_id
+      - name: ordered_at
+        description: When the order was placed (UTC).
+        data_type: timestamp
+        data_tests: [not_null]
+      - name: order_date
+        description: Date the order was placed; the date every daily and monthly figure uses.
+        data_type: date
+      - name: order_status
+        description: pending, paid, shipped, delivered or cancelled.
+        data_type: varchar
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [pending, paid, shipped, delivered, cancelled]
+      - name: currency
+        description: Currency the customer paid in (EUR, GBP or CHF). All money columns here are euros.
+        data_type: varchar
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [EUR, GBP, CHF]
+      - name: fx_rate
+        description: Units of the order currency per 1 EUR used to convert this order (1 for EUR).
+        data_type: double
+      - name: fx_rate_date
+        description: ECB business day the fx_rate was published; on or before the order date.
+        data_type: date
+      - name: shipping_country_code
+        description: Country the order shipped to (ISO alpha-2). Usually the customer's country.
+        data_type: varchar
+      - name: shipped_at
+        description: When the order left the warehouse; null until it ships.
+        data_type: timestamp
+      - name: delivered_at
+        description: When the order arrived; null until delivered.
+        data_type: timestamp
+      - name: line_item_count
+        description: Number of lines on the order.
+        data_type: bigint
+      - name: units
+        description: Total units across all lines on the order.
+        data_type: bigint
+      - name: gross_amount_eur
+        description: Line prices times quantity, before discounts, in euros. Booked.
+        data_type: double
+      - name: discount_eur
+        description: Total discount granted on the order, in euros. Booked.
+        data_type: double
+      - name: net_amount_eur
+        description: >
+          Gross minus discounts, in euros, for the order as placed: cancelled orders and returned
+          lines included, shipping excluded. This is booked revenue: what customers asked for.
+          Summing it answers "how much was ordered", not "how much did we earn".
+        data_type: double
+        data_tests: [not_null]
+      - name: realised_net_amount_eur
+        description: >
+          Realised revenue in euros: net_amount_eur minus lines of cancelled orders and minus
+          lines that were returned, shipping excluded. Zero for a cancelled order. This is the
+          column to sum for a revenue figure. It is stored per row so that it stays additive at
+          every grain; ratios must be derived from additive parts.
+        data_type: double
+        data_tests:
+          - not_null
+      - name: shipping_eur
+        description: Shipping fee charged on the order in euros; zero above the free-shipping threshold.
+        data_type: double
+      - name: total_amount_eur
+        description: "Booked net amount plus shipping fee, in euros: what the customer was charged."
+        data_type: double
+      - name: is_cancelled
+        description: True when the order was cancelled.
+        data_type: boolean
+      - name: is_delivered
+        description: True when the order was delivered.
+        data_type: boolean
+      - name: has_return
+        description: True when at least one line of the order was returned.
+        data_type: boolean
+      - name: days_to_ship
+        description: Days between ordering and shipping; null until the order ships.
+        data_type: double
+
+  - name: fct_order_items
+    description: >
+      One row per order line, with its money in euros. Realised revenue per line is zero when
+      the order was cancelled or the line was returned (a return is always the whole line).
+    # Lightdash only: lets an order-line explore group by product columns such as category.
+    # MetricFlow and dbt ignore it.
+    config:
+      meta:
+        joins:
+          - join: dim_products
+            sql_on: ${fct_order_items.product_id} = ${dim_products.product_id}
+            relationship: many-to-one
+    columns:
+      - name: order_item_id
+        description: Primary key. One row per order line.
+        data_type: bigint
+        data_tests: [unique, not_null]
+      - name: order_id
+        description: The order the line belongs to.
+        data_type: bigint
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('fct_orders')
+                field: order_id
+      - name: product_id
+        description: The product on the line.
+        data_type: bigint
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_products')
+                field: product_id
+      - name: product_category
+        description: >
+          Category of the product on the line, copied from dim_products so that a metric
+          filtered on category stays on one semantic model.
+        data_type: varchar
+        data_tests: [not_null]
+      - name: customer_id
+        description: The customer who placed the order.
+        data_type: bigint
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_customers')
+                field: customer_id
+      - name: ordered_at
+        description: When the order was placed (UTC).
+        data_type: timestamp
+      - name: order_date
+        description: Date the order was placed.
+        data_type: date
+      - name: order_status
+        description: Status of the order the line is on.
+        data_type: varchar
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [pending, paid, shipped, delivered, cancelled]
+      - name: currency
+        description: Currency the customer paid in (EUR, GBP or CHF). Money here is euros.
+        data_type: varchar
+      - name: shipping_country_code
+        description: Country the order shipped to (ISO alpha-2).
+        data_type: varchar
+      - name: quantity
+        description: Units on the line, whatever the order or return status.
+        data_type: bigint
+      - name: unit_price_eur
+        description: Price of one unit in euros, before discount.
+        data_type: double
+      - name: gross_amount_eur
+        description: Quantity times unit price in euros, before discount. Booked.
+        data_type: double
+      - name: discount_eur
+        description: Discount on the line in euros. Booked.
+        data_type: double
+      - name: net_amount_eur
+        description: "Gross minus discount in euros, as placed. Booked revenue: includes cancelled and returned lines."
+        data_type: double
+        data_tests: [not_null]
+      - name: realised_net_amount_eur
+        description: >
+          Realised revenue in euros: net_amount_eur, but zero when the order was cancelled or the
+          line was returned. Sum this for a revenue figure.
+        data_type: double
+        data_tests: [not_null]
+      - name: is_cancelled
+        description: True when the order the line is on was cancelled.
+        data_type: boolean
+      - name: is_returned
+        description: True when the line has at least one return.
+        data_type: boolean
+      - name: sold_quantity
+        description: Units sold; the line's quantity, or zero when the order was cancelled.
+        data_type: bigint
+      - name: returned_quantity
+        description: Units returned; the line's quantity when the line was returned on an order that was not cancelled, else zero.
+        data_type: bigint
+
+  - name: fct_returns
+    description: >
+      One row per returned order line. A line is returned at most once and always whole, after
+      its order was delivered, so counting rows here counts returned lines. Use returned_at for
+      when the refund happened and fct_order_items.is_returned to slice by order date.
+    columns:
+      - name: return_id
+        description: Primary key. One row per return event.
+        data_type: bigint
+        data_tests: [unique, not_null]
+      - name: order_item_id
+        description: The returned order line.
+        data_type: bigint
+        data_tests:
+          - not_null
+          - unique
+          - relationships:
+              arguments:
+                to: ref('fct_order_items')
+                field: order_item_id
+      - name: order_id
+        description: The order the returned line is on.
+        data_type: bigint
+      - name: customer_id
+        description: The customer who returned the line.
+        data_type: bigint
+      - name: product_id
+        description: The product returned.
+        data_type: bigint
+      - name: shipping_country_code
+        description: Country the order shipped to (ISO alpha-2).
+        data_type: varchar
+      - name: currency
+        description: Currency the customer paid in. Money here is euros.
+        data_type: varchar
+      - name: returned_at
+        description: When the return was recorded (UTC).
+        data_type: timestamp
+      - name: return_date
+        description: Date the return was recorded.
+        data_type: date
+      - name: return_reason
+        description: Why the customer returned the line.
+        data_type: varchar
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [defective, arrived_late, changed_mind, not_as_described, wrong_size]
+      - name: quantity
+        description: Units on the returned line.
+        data_type: bigint
+      - name: refund_amount_eur
+        description: Net value of the returned line in euros (the amount refunded).
+        data_type: double
+      - name: days_to_return
+        description: Days between ordering and the return.
+        data_type: double
+
+  - name: fct_daily_country_sales
+    description: >
+      One row per country per day across the whole data window, including days with no sales,
+      joined to that day's weather (one reference city per country) and national holidays. The
+      table that answers "does rain sell rain gear". Country is the order's shipping country,
+      because that is where the weather happens. Revenue is realised revenue unless the column
+      says booked; shipping is excluded.
+    columns:
+      - name: country_day_id
+        description: Primary key. Country code and date, e.g. BE-2026-03-14.
+        data_type: varchar
+        data_tests: [unique, not_null]
+      - name: country_code
+        description: Country (BE, NL, DE, GB or CH).
+        data_type: varchar
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [BE, NL, DE, GB, CH]
+      - name: date_day
+        description: The calendar day (order date for sales, observation day for weather).
+        data_type: date
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_date')
+                field: date_day
+      - name: is_weekend
+        description: True on Saturday and Sunday.
+        data_type: boolean
+      - name: orders_placed
+        description: Orders placed that day, cancelled ones included.
+        data_type: bigint
+      - name: orders
+        description: Orders placed that day that were not cancelled.
+        data_type: bigint
+      - name: units
+        description: Units on the orders that were not cancelled; returned units still count.
+        data_type: bigint
+      - name: booked_net_revenue_eur
+        description: "Booked revenue in euros: orders as placed, cancelled and returned included."
+        data_type: double
+      - name: realised_net_revenue_eur
+        description: "Realised revenue in euros: not cancelled, returned lines removed. This is \"revenue\"."
+        data_type: double
+      - name: rain_gear_units
+        description: Units of rain_gear sold (not cancelled).
+        data_type: bigint
+      - name: rain_gear_realised_net_revenue_eur
+        description: Realised revenue in euros from products in the rain_gear category.
+        data_type: double
+      - name: rain_mm
+        description: Rain that fell that day in the country's reference city, in millimetres.
+        data_type: double
+      - name: precipitation_mm
+        description: Rain plus snow (water equivalent) that day in millimetres.
+        data_type: double
+      - name: temperature_mean_c
+        description: Mean temperature that day in degrees Celsius.
+        data_type: double
+      - name: temperature_max_c
+        description: Highest temperature that day in degrees Celsius.
+        data_type: double
+      - name: sunshine_hours
+        description: Hours of sunshine that day.
+        data_type: double
+      - name: is_rainy_day
+        description: True when rain_mm is at or above the rainy_day_threshold_mm variable (1.0 mm).
+        data_type: boolean
+      - name: is_holiday
+        description: True when the day is a national public holiday in the country.
+        data_type: boolean
+      - name: holiday_name
+        description: English name of the national holiday; null when the day is not one.
+        data_type: varchar

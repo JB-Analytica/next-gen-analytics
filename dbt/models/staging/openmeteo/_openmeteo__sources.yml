@@ -1,0 +1,17 @@
+version: 2
+
+sources:
+  - name: openmeteo
+    description: >
+      Daily observed weather from the Open-Meteo archive API, one reference city per country,
+      landed by dlt into raw_open_meteo.
+    schema: raw_open_meteo
+    loader: dlt
+    config:
+      loaded_at_field: "to_timestamp(cast(split_part(_dlt_load_id, '.', 1) as bigint))"
+      freshness:
+        warn_after: { count: 1, period: day }
+        error_after: { count: 3, period: day }
+    tables:
+      - name: daily_weather
+        description: One row per reference city per day.

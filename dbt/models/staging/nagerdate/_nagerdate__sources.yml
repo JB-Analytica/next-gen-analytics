@@ -1,0 +1,17 @@
+version: 2
+
+sources:
+  - name: nagerdate
+    description: >
+      Public holidays from the Nager.Date API, landed by dlt into raw_nager_date. The lists
+      (counties, types) stay on the holiday row as JSON; staging unnests them.
+    schema: raw_nager_date
+    loader: dlt
+    config:
+      loaded_at_field: "to_timestamp(cast(split_part(_dlt_load_id, '.', 1) as bigint))"
+      freshness:
+        warn_after: { count: 1, period: day }
+        error_after: { count: 3, period: day }
+    tables:
+      - name: holidays
+        description: One row per holiday per country.

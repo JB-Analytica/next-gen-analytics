@@ -1,0 +1,40 @@
+name: nga
+version: "1.0.0"
+config-version: 2
+profile: nga
+
+model-paths: ["models"]
+macro-paths: ["macros"]
+test-paths: ["tests"]
+target-path: "target"
+clean-targets: ["target", "dbt_packages"]
+
+flags:
+  send_anonymous_usage_stats: false
+
+vars:
+  # A day counts as rainy at or above this much rain. Used by fct_daily_country_sales.
+  rainy_day_threshold_mm: 1.0
+
+# Schemas are <target schema>_<layer>: nga_staging, nga_intermediate, nga_marts in prod;
+# nga_dev_staging, ... in dev. dbt's default generate_schema_name does this; do not override it.
+# Dev and prod therefore never share a fully-qualified table name, which is what Orchestra's
+# state-aware runs key their state by.
+models:
+  nga:
+    staging:
+      +schema: staging
+      +materialized: view
+    intermediate:
+      +schema: intermediate
+      +materialized: view
+    marts:
+      +schema: marts
+      +materialized: table
+      # Marts are the contract with the business: the only layer dashboards and answers read.
+      +tags: ["bi"]
+      +freshness:
+        build_after:
+          count: 1
+          period: day
+          updates_on: any

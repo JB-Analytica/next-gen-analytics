@@ -1,0 +1,74 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "next-gen-analytics"
+version = "0.1.0"
+description = "JB Analytica small-company stack: model2data + public APIs -> dlt -> MotherDuck -> dbt + MetricFlow -> Claude dashboards, orchestrated by Orchestra."
+requires-python = ">=3.10"
+license = "MIT"
+authors = [{ name = "JB Analytica" }]
+dependencies = [
+    "dlt[motherduck,duckdb,sql_database]>=1.30",
+    # dbt-core 2.0 is release-candidate and no adapter accepts it yet; stay on the latest 1.x.
+    "dbt-core>=1.12,<2",
+    "dbt-duckdb",
+    "dbt-metricflow[duckdb]",
+    "model2data>=1.16",
+    "duckdb>=1.3",
+    "duckdb-engine>=0.17",
+    # SQLAlchemy 2.0.55 added a pg_description join (CAST ... AS REGCLASS) to primary-key
+    # reflection that DuckDB cannot run, so dlt cannot read the generated DuckDB file with it.
+    # 2.0.54 is the newest that works; 2.1 fails on pg_collation instead. See docs/versions.md.
+    "sqlalchemy>=2.0,<2.0.55",
+    "pyarrow>=17",
+    "typer>=0.20",
+    "python-dotenv>=1.0",
+    "requests>=2.32",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "pytest-cov",
+    "pre-commit",
+    "ruff>=0.1.0",
+    "ty>=0.0.4",
+    "poethepoet>=0.38.0",
+]
+
+[project.scripts]
+nga = "nga.cli:app"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["nga*"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM"]
+
+[tool.ruff.lint.flake8-bugbear]
+# typer and dlt both read their configuration from a call in the default value.
+extend-immutable-calls = ["typer.Argument", "typer.Option", "dlt.sources.incremental"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+filterwarnings = ["ignore::DeprecationWarning"]
+
+[tool.poe.tasks]
+lint = "ruff check ."
+fmt = "ruff format ."
+typecheck = "ty check nga"
+test = "pytest"
+check = ["lint", "typecheck", "test"]
+generate = "nga generate"
+load = "nga load"
+transform = "nga transform"
+run = "nga run"
+metrics = "nga metrics"

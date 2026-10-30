@@ -1,0 +1,244 @@
+version: 2
+
+# Business definitions. "Revenue" means realised revenue (not cancelled, returned lines removed,
+# shipping excluded), in euros. Booked revenue is the order as placed.
+
+metrics:
+  - name: orders
+    label: Orders
+    description: >
+      Orders placed that were not cancelled. Use orders_placed to include cancelled ones.
+    type: simple
+    type_params:
+      measure: orders_not_cancelled
+
+  - name: orders_placed
+    label: Orders placed
+    description: All orders placed, cancelled ones included.
+    type: simple
+    type_params:
+      measure: orders_placed
+
+  - name: cancelled_orders
+    label: Cancelled orders
+    description: Orders that were cancelled.
+    type: simple
+    type_params:
+      measure: orders_cancelled
+
+  - name: cancellation_rate
+    label: Cancellation rate
+    description: Share of placed orders that were cancelled.
+    type: ratio
+    type_params:
+      numerator: cancelled_orders
+      denominator: orders_placed
+
+  - name: realised_revenue_eur
+    label: Revenue (realised, EUR)
+    description: >
+      Revenue in euros: orders that were not cancelled, minus returned lines, shipping excluded.
+      This is what "revenue" means unless someone says booked.
+    type: simple
+    type_params:
+      measure: realised_revenue
+
+  - name: booked_revenue_eur
+    label: Booked revenue (EUR)
+    description: >
+      Revenue in euros for orders as placed: cancelled orders and returned lines included,
+      shipping excluded. Always at least the realised revenue.
+    type: simple
+    type_params:
+      measure: booked_revenue
+
+  - name: shipping_revenue_eur
+    label: Shipping fees (EUR)
+    description: Shipping fees charged to customers, in euros, on all orders placed.
+    type: simple
+    type_params:
+      measure: shipping_revenue
+
+  - name: average_order_value_eur
+    label: Average order value (EUR)
+    description: >
+      Realised revenue in euros per order that was not cancelled. Returned lines lower it
+      because they come out of the revenue.
+    type: ratio
+    type_params:
+      numerator: realised_revenue_eur
+      denominator: orders
+
+  - name: units_sold
+    label: Units sold
+    description: Units on orders that were not cancelled; returned units are still counted.
+    type: simple
+    type_params:
+      measure: units_sold
+
+  - name: units_returned
+    label: Units returned
+    description: Units on lines that customers returned (orders that were not cancelled).
+    type: simple
+    type_params:
+      measure: units_returned
+
+  - name: return_rate
+    label: Return rate
+    description: >
+      Units returned divided by units sold, by the order date. A return is always the whole
+      line, so this is also the share of sold units that came back.
+    type: ratio
+    type_params:
+      numerator: units_returned
+      denominator: units_sold
+
+  - name: refunded_amount_eur
+    label: Refunded amount (EUR)
+    description: Euros refunded on return events, by the date of the return.
+    type: simple
+    type_params:
+      measure: refunded_amount
+
+  - name: new_customers
+    label: New customers
+    description: Customer accounts created in the period.
+    type: simple
+    type_params:
+      measure: new_customers_count
+
+  - name: active_customers
+    label: Active customers
+    description: >
+      Distinct customers who placed at least one order that was not cancelled in the period.
+      Not additive across periods: a customer active in two months counts once per month.
+    type: simple
+    type_params:
+      measure: active_customers
+
+  - name: rain_gear_revenue_eur
+    label: Rain gear revenue (EUR)
+    description: Realised revenue in euros from products in the rain_gear category.
+    type: simple
+    type_params:
+      measure: line_realised_revenue
+    filter: |
+      {{ Dimension('order_item__product_category') }} = 'rain_gear'
+
+  - name: rain_gear_share_of_revenue
+    label: Rain gear share of revenue
+    description: Share of realised revenue that comes from the rain_gear category.
+    type: ratio
+    type_params:
+      numerator: rain_gear_revenue_eur
+      denominator: line_revenue_eur
+
+  - name: line_revenue_eur
+    label: Revenue by order line (EUR)
+    description: >
+      Realised revenue in euros summed over order lines. Equals realised_revenue_eur; use it
+      when slicing by product attributes such as category.
+    type: simple
+    type_params:
+      measure: line_realised_revenue
+
+  - name: country_days
+    label: Country-days
+    description: Number of country-days observed (one per country per day).
+    type: simple
+    type_params:
+      measure: country_days
+
+  - name: rainy_days
+    label: Rainy country-days
+    description: Country-days with rain at or above 1.0 mm in the country's reference city.
+    type: simple
+    type_params:
+      measure: rainy_country_days
+
+  - name: rainy_day_share
+    label: Rainy day share
+    description: Share of country-days that were rainy (rain at or above 1.0 mm).
+    type: ratio
+    type_params:
+      numerator: rainy_days
+      denominator: country_days
+
+  - name: rainy_day_revenue_eur
+    label: Revenue on rainy days (EUR)
+    description: Realised revenue in euros on rainy country-days.
+    type: simple
+    type_params:
+      measure: daily_realised_revenue
+    filter: |
+      {{ Dimension('country_day__is_rainy_day') }}
+
+  - name: revenue_per_rainy_day_eur
+    label: Revenue per rainy day (EUR)
+    description: >
+      Average realised revenue in euros for a country on a rainy day. Compare with
+      revenue_per_dry_day_eur to see whether rain moves sales.
+    type: ratio
+    type_params:
+      numerator: rainy_day_revenue_eur
+      denominator: rainy_days
+
+  - name: dry_day_revenue_eur
+    label: Revenue on dry days (EUR)
+    description: Realised revenue in euros on country-days that were not rainy.
+    type: simple
+    type_params:
+      measure: daily_realised_revenue
+    filter: |
+      not {{ Dimension('country_day__is_rainy_day') }}
+
+  - name: dry_days
+    label: Dry country-days
+    description: Country-days with rain below 1.0 mm.
+    type: simple
+    type_params:
+      measure: country_days
+    filter: |
+      not {{ Dimension('country_day__is_rainy_day') }}
+
+  - name: revenue_per_dry_day_eur
+    label: Revenue per dry day (EUR)
+    description: Average realised revenue in euros for a country on a day that was not rainy.
+    type: ratio
+    type_params:
+      numerator: dry_day_revenue_eur
+      denominator: dry_days
+
+  - name: rain_gear_revenue_per_rainy_day_eur
+    label: Rain gear revenue per rainy day (EUR)
+    description: Average realised rain_gear revenue in euros for a country on a rainy day.
+    type: ratio
+    type_params:
+      numerator: rain_gear_revenue_on_rainy_days_eur
+      denominator: rainy_days
+
+  - name: rain_gear_revenue_on_rainy_days_eur
+    label: Rain gear revenue on rainy days (EUR)
+    description: Realised rain_gear revenue in euros on rainy country-days.
+    type: simple
+    type_params:
+      measure: daily_rain_gear_revenue
+    filter: |
+      {{ Dimension('country_day__is_rainy_day') }}
+
+  - name: rain_gear_revenue_per_dry_day_eur
+    label: Rain gear revenue per dry day (EUR)
+    description: Average realised rain_gear revenue in euros for a country on a day that was not rainy.
+    type: ratio
+    type_params:
+      numerator: rain_gear_revenue_on_dry_days_eur
+      denominator: dry_days
+
+  - name: rain_gear_revenue_on_dry_days_eur
+    label: Rain gear revenue on dry days (EUR)
+    description: Realised rain_gear revenue in euros on country-days that were not rainy.
+    type: simple
+    type_params:
+      measure: daily_rain_gear_revenue
+    filter: |
+      not {{ Dimension('country_day__is_rainy_day') }}

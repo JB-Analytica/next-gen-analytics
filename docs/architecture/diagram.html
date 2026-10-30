@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Noordkust data platform</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,400;0,500;0,600;1,400&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Poppins', system-ui, sans-serif; background: #F6F8FB; color: #182333; min-height: 100vh;
+      display: flex; align-items: center; justify-content: center; padding: 3rem 2rem; }
+    .frame { max-width: 1200px; width: 100%; }
+    .eyebrow { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 0.66rem; font-weight: 500;
+      letter-spacing: 0.18em; text-transform: uppercase; color: #4B586D; margin-bottom: 0.5rem; }
+    h1 { font-size: clamp(1.5rem, 2.4vw + 0.75rem, 1.75rem); font-weight: 400;
+      letter-spacing: -0.01em; line-height: 1.15; margin-bottom: 0.4rem; }
+    .sub { color: #4B586D; font-size: 0.9rem; margin-bottom: 1.5rem; max-width: 70ch; }
+    svg { width: 100%; min-width: 900px; display: block; }
+    .colophon { margin-top: 1.25rem; padding-top: 0.75rem;
+      border-top: 1px solid rgba(24,35,51,0.12); font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 0.66rem;
+      color: #4B586D; letter-spacing: 0.04em; }
+  </style>
+</head>
+<body>
+  <div class="frame">
+    <p class="eyebrow">Architecture · next-gen-analytics</p>
+    <h1>Noordkust data platform</h1>
+    <p class="sub">Four sources land in MotherDuck through dlt; dbt and MetricFlow turn them into governed metrics that a live Claude dashboard and Claude&#x27;s answers both read. Orchestra runs it every morning.</p>
+    <svg viewBox="0 0 1200 600" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="diagram-title diagram-desc">
+      <title id="diagram-title">Noordkust data platform</title>
+      <desc id="diagram-desc">A synthetic webshop and three public APIs are loaded by dlt into MotherDuck, modelled by dbt with MetricFlow metrics, and served to a live Claude KPI dashboard and Claude answers; Orchestra schedules the loads and dbt daily and GitHub holds all code.</desc>
+      <defs>
+        <marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#4B586D"/></marker>
+        <marker id="arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#C96E00"/></marker>
+        <marker id="arrow-link" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#0C6EBA"/></marker>
+      </defs>
+      <rect width="100%" height="100%" fill="#F6F8FB"/>
+      <path d="M200 124 H248 Q256 124 256 132 V176 Q256 184 264 184 H276" fill="none" stroke="#4B586D" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <path d="M200 212 H276" fill="none" stroke="#4B586D" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <path d="M200 300 H244 Q252 300 252 292 V236 Q252 228 260 228 H276" fill="none" stroke="#4B586D" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <path d="M200 388 H256 Q264 388 264 380 V248 Q264 240 272 240 H276" fill="none" stroke="#4B586D" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <path d="M460 212 H516" fill="none" stroke="#C96E00" stroke-width="1.4" marker-end="url(#arrow-accent)"/>
+      <path d="M700 212 H756" fill="none" stroke="#C96E00" stroke-width="1.4" marker-end="url(#arrow-accent)"/>
+      <path d="M368 140 V176" fill="none" stroke="#4B586D" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arrow)"/>
+      <path d="M848 140 V176" fill="none" stroke="#4B586D" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arrow)"/>
+      <path d="M940 212 H1000" fill="none" stroke="#C96E00" stroke-width="1.4" marker-end="url(#arrow-accent)"/>
+      <path d="M940 232 H964 Q972 232 972 240 V292 Q972 300 980 300 H1000" fill="none" stroke="#C96E00" stroke-width="1.4" marker-end="url(#arrow-accent)"/>
+      <path d="M608 460 V408" fill="none" stroke="#C96E00" stroke-width="1.2" stroke-dasharray="5,4" marker-end="url(#arrow-accent)"/>
+      <rect x="260" y="72" width="696" height="336" rx="8" fill="rgba(24,35,51,0.025)" stroke="rgba(24,35,51,0.32)" stroke-width="1" stroke-dasharray="4,4"/>
+      <rect x="276" y="66" width="244" height="12" fill="#F6F8FB"/>
+      <text x="280" y="76" fill="#4B586D" font-size="8" font-weight="500" font-family="'JetBrains Mono', ui-monospace, monospace" text-anchor="start" letter-spacing="0.14em">DATA PLATFORM · MOTHERDUCK EU</text>
+      <rect x="204" y="104" width="40" height="12" rx="2" fill="#F6F8FB"/>
+      <text x="224" y="113" fill="#62748A" font-size="8" font-weight="400" font-family="'JetBrains Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.06em">DUCKDB</text>
+      <rect x="220" y="192" width="36" height="12" rx="2" fill="#F6F8FB"/>
+      <text x="238" y="201" fill="#62748A" font-size="8" font-weight="400" font-family="'JetBrains Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.06em">HTTPS</text>
+      <rect x="204" y="280" width="36" height="12" rx="2" fill="#F6F8FB"/>
+      <text x="222" y="289" fill="#62748A" font-size="8" font-weight="400" font-family="'JetBrains Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.06em">HTTPS</text>
+      <rect x="210" y="368" width="36" height="12" rx="2" fill="#F6F8FB"/>
+      <text x="228" y="377" fill="#62748A" font-size="8" font-weight="400" font-family="'JetBrains Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.06em">HTTPS</text>
+      <rect x="470" y="192" width="36" height="12" rx="2" fill="#F6F8FB"/>
+      <text x="488" y="201" fill="#62748A" font-size="8" font-weight="400" font-family="'JetBrains Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.06em">WRITE</text>
+      <rect x="710" y="192" width="36" height="12" rx="2" fill="#F6F8FB"/>
+      <text x="728" y="201" fill="#62748A" font-size="8" font-weight="400" font-family="'JetBrains Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.06em">BUILD</text>
+      <rect x="616" y="428" width="24" height="12" rx="2" fill="#F6F8FB"/>
+      <text x="628" y="437" fill="#62748A" font-size="8" font-weight="400" font-family="'JetBrains Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.06em">GIT</text>
+      <rect x="946" y="192" width="48" height="12" rx="2" fill="#F6F8FB"/>
+      <text x="970" y="201" fill="#62748A" font-size="8" font-weight="400" font-family="'JetBrains Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.06em">LIVE SQL</text>
+      <rect x="916" y="264" width="48" height="12" rx="2" fill="#F6F8FB"/>
+      <text x="940" y="273" fill="#62748A" font-size="8" font-weight="400" font-family="'JetBrains Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.06em">MF QUERY</text>
+      <rect x="40" y="92" width="160" height="64" rx="6" fill="#F6F8FB"/>
+      <rect x="40" y="92" width="160" height="64" rx="6" fill="rgba(75,88,109,0.06)" stroke="#62748A" stroke-width="1"/>
+      <rect x="48" y="100" width="24" height="12" rx="2" fill="none" stroke="#4B586D" stroke-opacity="0.45" stroke-width="0.8"/>
+      <text x="60" y="109" fill="#4B586D" font-size="7" font-weight="500" font-family="'JetBrains Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.08em">DB</text>
+      <text x="120" y="128" fill="#182333" font-size="12" font-weight="600" font-family="'Poppins', system-ui, sans-serif" text-anchor="middle">Webshop</text>
+      <text x="120" y="144" fill="#62748A" font-size="9" font-weight="400" font-family="'JetBrains Mono', ui-monospace, monospace" text-anchor="middle">model2data · synthetic</text>
+      <rect x="40" y="180" width="160" height="64" rx="6" fill="#F6F8FB"/>
+      <rect x="40" y="180" width="160" height="64" rx="6" fill="rgba(75,88,109,0.06)" stroke="#62748A" stroke-width="1"/>
+      <rect x="48" y="188" width="28" height="12" rx="2" fill="none" stroke="#4B586D" stroke-opacity="0.45" stroke-width="0.8"/>
+      <text x="62" y="197" fill="#4B586D" font-size="7" font-weight="500" font-family="'JetBrains Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.08em">API</text>
+      <text x="120" y="216" fill="#182333" font-size="12" font-weight="600" font-family="'Poppins', system-ui, sans-serif" text-anchor="middle">Open-Meteo</text>
+      <text x="120" y="232" fill="#62748A" font-size="9" font-weight="400" font-family="'JetBrains Mono', ui-monospace, monospace" text-anchor="middle">daily weather</text>
+      <rect x="40" y="268" width="160" height="64" rx="6" fill="#F6F8FB"/>
+      <rect x="40" y="268" width="160" height="64" rx="6" fill="rgba(75,88,109,0.06)" stroke="#62748A" stroke-width="1"/>
+      <rect x="48" y="276" width="28" height="12" rx="2" fill="none" stroke="#4B586D" stroke-opacity="0.45" stroke-width="0.8"/>
+      <text x="62" y="285" fill="#4B586D" font-size="7" font-weight="500" font-family="'JetBrains Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.08em">API</text>
+      <text x="120" y="304" fill="#182333" font-size="12" font-weight="600" font-family="'Poppins', system-ui, sans-serif" text-anchor="middle">Frankfurter</text>
+      <text x="120" y="320" fill="#62748A" font-size="9" font-weight="400" font-family="'JetBrains Mono', ui-monospace, monospace" text-anchor="middle">ECB exchange rates</text>
+      <rect x="40" y="356" width="160" height="64" rx="6" fill="#F6F8FB"/>
+      <rect x="40" y="356" width="160" height="64" rx="6" fill="rgba(75,88,109,0.06)" stroke="#62748A" stroke-width="1"/>
+      <rect x="48" y="364" width="28" height="12" rx="2" fill="none" stroke="#4B586D" stroke-opacity="0.45" stroke-width="0.8"/>
+      <text x="62" y="373" fill="#4B586D" font-size="7" font-weight="500" font-family="'JetBrains Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.08em">API</text>
+      <text x="120" y="392" fill="#182333" font-size="12" font-weight="600" font-family="'Poppins', system-ui, sans-serif" text-anchor="middle">Nager.Date</text>
+      <text x="120" y="408" fill="#62748A" font-size="9" font-weight="400" font-family="'JetBrains Mono', ui-monospace, monospace" text-anchor="middle">public holidays</text>
+      <rect x="276" y="96" width="664" height="44" rx="6" fill="#F6F8FB"/>
+      <rect x="276" y="96" width="664" height="44" rx="6" fill="rgba(24,35,51,0.05)" stroke="rgba(24,35,51,0.32)" stroke-width="1"/>
+      <rect x="284" y="104" width="28" height="12" rx="2" fill="none" stroke="#4B586D" stroke-opacity="0.45" stroke-width="0.8"/>
+      <text x="298" y="113" fill="#4B586D" font-size="7" font-weight="500" font-family="'JetBrains Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.08em">DAG</text>
+      <text x="608" y="122" fill="#182333" font-size="12" font-weight="600" font-family="'Poppins', system-ui, sans-serif" text-anchor="middle">Orchestra</text>
+      <text x="608" y="132" fill="#62748A" font-size="9" font-weight="400" font-family="'JetBrains Mono', ui-monospace, monospace" text-anchor="middle">daily 06:00 Europe/Brussels · 4 loads in parallel · state-aware dbt</text>
+      <rect x="276" y="176" width="184" height="72" rx="6" fill="#F6F8FB"/>
+      <rect x="276" y="176" width="184" height="72" rx="6" fill="#ffffff" stroke="#182333" stroke-width="1"/>
+      <rect x="284" y="184" width="44" height="12" rx="2" fill="none" stroke="#182333" stroke-opacity="0.45" stroke-width="0.8"/>
+      <text x="306" y="193" fill="#182333" font-size="7" font-weight="500" font-family="'JetBrains Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.08em">INGEST</text>
+      <text x="368" y="216" fill="#182333" font-size="12" font-weight="600" font-family="'Poppins', system-ui, sans-serif" text-anchor="middle">dlt</text>
+      <text x="368" y="232" fill="#62748A" font-size="9" font-weight="400" font-family="'JetBrains Mono', ui-monospace, monospace" text-anchor="middle">4 pipelines · merge</text>
+      <rect x="516" y="176" width="184" height="72" rx="6" fill="#F6F8FB"/>
+      <rect x="516" y="176" width="184" height="72" rx="6" fill="rgba(250,147,6,0.12)" stroke="#C96E00" stroke-width="1"/>
+      <rect x="524" y="184" width="40" height="12" rx="2" fill="none" stroke="#C96E00" stroke-opacity="0.45" stroke-width="0.8"/>
+      <text x="544" y="193" fill="#C96E00" font-size="7" font-weight="500" font-family="'JetBrains Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.08em">STORE</text>
+      <text x="608" y="216" fill="#182333" font-size="12" font-weight="600" font-family="'Poppins', system-ui, sans-serif" text-anchor="middle">MotherDuck</text>
+      <text x="608" y="232" fill="#62748A" font-size="9" font-weight="400" font-family="'JetBrains Mono', ui-monospace, monospace" text-anchor="middle">raw_* → nga_marts</text>
+      <rect x="756" y="176" width="184" height="72" rx="6" fill="#F6F8FB"/>
+      <rect x="756" y="176" width="184" height="72" rx="6" fill="rgba(250,147,6,0.12)" stroke="#C96E00" stroke-width="1"/>
+      <rect x="764" y="184" width="40" height="12" rx="2" fill="none" stroke="#C96E00" stroke-opacity="0.45" stroke-width="0.8"/>
+      <text x="784" y="193" fill="#C96E00" font-size="7" font-weight="500" font-family="'JetBrains Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.08em">MODEL</text>
+      <text x="848" y="216" fill="#182333" font-size="12" font-weight="600" font-family="'Poppins', system-ui, sans-serif" text-anchor="middle">dbt + MetricFlow</text>
+      <text x="848" y="232" fill="#62748A" font-size="9" font-weight="400" font-family="'JetBrains Mono', ui-monospace, monospace" text-anchor="middle">23 models · 29 metrics</text>
+      <text x="940" y="324" fill="#4B586D" font-size="12" font-weight="400" font-family="'Poppins', system-ui, sans-serif" text-anchor="end" font-style="italic">One definition per metric:</text>
+      <text x="940" y="340" fill="#4B586D" font-size="12" font-weight="400" font-family="'Poppins', system-ui, sans-serif" text-anchor="end" font-style="italic">the dashboard and Claude both compile from it.</text>
+      <rect x="1000" y="180" width="160" height="64" rx="6" fill="#F6F8FB"/>
+      <rect x="1000" y="180" width="160" height="64" rx="6" fill="rgba(75,88,109,0.06)" stroke="#62748A" stroke-width="1"/>
+      <rect x="1008" y="188" width="24" height="12" rx="2" fill="none" stroke="#4B586D" stroke-opacity="0.45" stroke-width="0.8"/>
+      <text x="1020" y="197" fill="#4B586D" font-size="7" font-weight="500" font-family="'JetBrains Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.08em">BI</text>
+      <text x="1080" y="216" fill="#182333" font-size="12" font-weight="600" font-family="'Poppins', system-ui, sans-serif" text-anchor="middle">KPI dashboard</text>
+      <text x="1080" y="232" fill="#62748A" font-size="9" font-weight="400" font-family="'JetBrains Mono', ui-monospace, monospace" text-anchor="middle">Claude · live</text>
+      <rect x="1000" y="268" width="160" height="64" rx="6" fill="#F6F8FB"/>
+      <rect x="1000" y="268" width="160" height="64" rx="6" fill="rgba(75,88,109,0.06)" stroke="#62748A" stroke-width="1"/>
+      <rect x="1008" y="276" width="24" height="12" rx="2" fill="none" stroke="#4B586D" stroke-opacity="0.45" stroke-width="0.8"/>
+      <text x="1020" y="285" fill="#4B586D" font-size="7" font-weight="500" font-family="'JetBrains Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.08em">AI</text>
+      <text x="1080" y="304" fill="#182333" font-size="12" font-weight="600" font-family="'Poppins', system-ui, sans-serif" text-anchor="middle">Claude answers</text>
+      <text x="1080" y="320" fill="#62748A" font-size="9" font-weight="400" font-family="'JetBrains Mono', ui-monospace, monospace" text-anchor="middle">nga metrics query</text>
+      <rect x="40" y="460" width="1120" height="56" rx="6" fill="#F6F8FB"/>
+      <rect x="40" y="460" width="1120" height="56" rx="6" fill="rgba(24,35,51,0.05)" stroke="rgba(24,35,51,0.32)" stroke-width="1"/>
+      <rect x="48" y="468" width="28" height="12" rx="2" fill="none" stroke="#4B586D" stroke-opacity="0.45" stroke-width="0.8"/>
+      <text x="62" y="477" fill="#4B586D" font-size="7" font-weight="500" font-family="'JetBrains Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.08em">GIT</text>
+      <text x="600" y="492" fill="#182333" font-size="12" font-weight="600" font-family="'Poppins', system-ui, sans-serif" text-anchor="middle">GitHub · JB-Analytica/next-gen-analytics</text>
+      <text x="600" y="504" fill="#62748A" font-size="9" font-weight="400" font-family="'JetBrains Mono', ui-monospace, monospace" text-anchor="middle">pipelines · dbt + metrics · dashboard SQL and backup · CI — cloned by Orchestra on every run</text>
+      <line x1="40" y1="548" x2="1160" y2="548" stroke="rgba(24,35,51,0.10)" stroke-width="0.8"/>
+      <text x="40" y="568" fill="#4B586D" font-size="8" font-weight="500" font-family="'JetBrains Mono', ui-monospace, monospace" text-anchor="start" letter-spacing="0.14em">LEGEND</text>
+      <path d="M136 564 H168" fill="none" stroke="#C96E00" stroke-width="1.4" marker-end="url(#arrow-accent)"/>
+      <text x="180" y="568" fill="#4B586D" font-size="9" font-weight="400" font-family="'JetBrains Mono', ui-monospace, monospace" text-anchor="start">governed data flow</text>
+      <path d="M336 564 H368" fill="none" stroke="#4B586D" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <text x="380" y="568" fill="#4B586D" font-size="9" font-weight="400" font-family="'JetBrains Mono', ui-monospace, monospace" text-anchor="start">extract</text>
+      <path d="M472 564 H504" fill="none" stroke="#4B586D" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arrow)"/>
+      <text x="516" y="568" fill="#4B586D" font-size="9" font-weight="400" font-family="'JetBrains Mono', ui-monospace, monospace" text-anchor="start">scheduled by Orchestra</text>
+      <path d="M696 564 H728" fill="none" stroke="#C96E00" stroke-width="1.2" stroke-dasharray="5,4" marker-end="url(#arrow-accent)"/>
+      <text x="740" y="568" fill="#4B586D" font-size="9" font-weight="400" font-family="'JetBrains Mono', ui-monospace, monospace" text-anchor="start">code and config</text>
+      <rect x="880" y="558" width="20" height="12" rx="3" fill="rgba(250,147,6,0.12)" stroke="#C96E00" stroke-width="1"/>
+      <text x="912" y="568" fill="#4B586D" font-size="9" font-weight="400" font-family="'JetBrains Mono', ui-monospace, monospace" text-anchor="start">focal: store and metric layer</text>
+    </svg>
+    <p class="colophon">Generated by docs/architecture/build.py · JB Analytica skin</p>
+  </div>
+</body>
+</html>

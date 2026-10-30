@@ -1,0 +1,89 @@
+version: 2
+
+models:
+  - name: stg_noordkust__customers
+    description: One row per customer account, renamed from raw_noordkust.customers.
+    columns:
+      - name: customer_id
+        description: Primary key. One row per customer.
+        data_tests: [unique, not_null]
+      - name: country_code
+        description: Customer's country (ISO 3166-1 alpha-2).
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [BE, NL, DE, GB, CH]
+      - name: dlt_load_id
+        description: dlt load package that last wrote the row (epoch seconds as text).
+
+  - name: stg_noordkust__products
+    description: One row per product, renamed from raw_noordkust.products.
+    columns:
+      - name: product_id
+        description: Primary key. One row per product.
+        data_tests: [unique, not_null]
+      - name: category
+        description: Product category.
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [rain_gear, cycling_apparel, bike_parts, camping, footwear]
+      - name: dlt_load_id
+        description: dlt load package that last wrote the row (epoch seconds as text).
+
+  - name: stg_noordkust__orders
+    description: One row per order, renamed from raw_noordkust.orders. Money is in minor units.
+    columns:
+      - name: order_id
+        description: Primary key. One row per order.
+        data_tests: [unique, not_null]
+      - name: customer_id
+        description: The customer who placed the order.
+        data_tests: [not_null]
+      - name: order_status
+        description: pending, paid, shipped, delivered or cancelled.
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [pending, paid, shipped, delivered, cancelled]
+      - name: currency
+        description: Currency of every money column on the order; follows the customer's country.
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [EUR, GBP, CHF]
+      - name: dlt_load_id
+        description: dlt load package that last wrote the row (epoch seconds as text).
+
+  - name: stg_noordkust__order_items
+    description: One row per product line on an order. Money is in the order's minor units.
+    columns:
+      - name: order_item_id
+        description: Primary key. One row per order line.
+        data_tests: [unique, not_null]
+      - name: order_id
+        description: The order the line belongs to.
+        data_tests: [not_null]
+      - name: dlt_load_id
+        description: dlt load package that last wrote the row (epoch seconds as text).
+
+  - name: stg_noordkust__returns
+    description: >
+      One row per return event. A return is always the whole order line. The source can hold
+      more than one return for the same line, so count lines, not rows, when asking whether a
+      line was returned.
+    columns:
+      - name: return_id
+        description: Primary key. One row per return event.
+        data_tests: [unique, not_null]
+      - name: order_item_id
+        description: The returned order line.
+        data_tests: [not_null]
+      - name: return_reason
+        description: Why the customer returned the line.
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [defective, arrived_late, changed_mind, not_as_described, wrong_size]
+      - name: dlt_load_id
+        description: dlt load package that last wrote the row (epoch seconds as text).

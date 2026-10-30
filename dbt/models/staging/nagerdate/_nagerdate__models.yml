@@ -1,0 +1,47 @@
+version: 2
+
+models:
+  - name: stg_nagerdate__holidays
+    description: One row per holiday per country.
+    columns:
+      - name: holiday_id
+        description: Primary key. dlt's row id for the holiday.
+        data_tests: [unique, not_null]
+      - name: country_code
+        description: ISO 3166-1 alpha-2 country the holiday belongs to.
+        data_tests: [not_null]
+      - name: holiday_date
+        description: Calendar day of the holiday.
+        data_tests: [not_null]
+      - name: dlt_load_id
+        description: dlt load package that last wrote the row (epoch seconds as text).
+
+  - name: stg_nagerdate__holiday_counties
+    description: One row per region a holiday is limited to. A holiday with none is national.
+    columns:
+      - name: holiday_county_id
+        description: Primary key, a hash of the holiday id and the value.
+        data_tests: [unique, not_null]
+      - name: holiday_id
+        description: The holiday this region belongs to.
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_nagerdate__holidays')
+                field: holiday_id
+
+  - name: stg_nagerdate__holiday_types
+    description: One row per type a holiday is classed as.
+    columns:
+      - name: holiday_type_id
+        description: Primary key, a hash of the holiday id and the value.
+        data_tests: [unique, not_null]
+      - name: holiday_id
+        description: The holiday this type belongs to.
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_nagerdate__holidays')
+                field: holiday_id

@@ -1,0 +1,14 @@
+{
+  "description": "Realised revenue per month and shipping country: the governed MetricFlow metric realised_revenue_eur, as SQL compiled by MetricFlow (nga metrics query --metrics realised_revenue_eur --group-by metric_time__month,order__shipping_country). Reads next_gen_analytics.nga_marts.fct_orders.",
+  "formerFile": "/_blob/58985ed028b1a6f06dcf4ef1602a842a",
+  "source": {
+    "args": {
+      "database": "next_gen_analytics",
+      "sql": "-- Monthly revenue by country: compiled by MetricFlow from `nga metrics query --metrics realised_revenue_eur --group-by metric_time__month,order__shipping_country`.\n-- Regenerate with `nga dashboard-sql`; do not edit by hand.\nSELECT\n  strftime(CAST(metric_time__month AS DATE), '%Y-%m-%d') AS metric_time__month\n  , order__shipping_country\n  , realised_revenue_eur\nFROM (\n  SELECT\n    DATE_TRUNC('month', order_date) AS metric_time__month\n    , shipping_country_code AS order__shipping_country\n    , SUM(realised_net_amount_eur) AS realised_revenue_eur\n  FROM \"next_gen_analytics\".\"nga_marts\".\"fct_orders\" orders_src_10000\n  GROUP BY\n    DATE_TRUNC('month', order_date)\n    , shipping_country_code\n  ORDER BY metric_time__month, order__shipping_country\n) AS metricflow\nORDER BY metric_time__month, order__shipping_country"
+    },
+    "connector": "MotherDuck",
+    "kind": "query",
+    "tool": "query"
+  },
+  "title": "Monthly revenue by country"
+}

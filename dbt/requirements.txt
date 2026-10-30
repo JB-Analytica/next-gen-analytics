@@ -1,0 +1,5 @@
+# Installed by Orchestra's dbt Core task, which reads requirements.txt next to the dbt project.
+# Pinned to uv.lock; tests/test_versions.py fails when they drift.
+dbt-core==1.12.6
+dbt-duckdb==1.11.1
+duckdb==1.5.6

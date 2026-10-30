@@ -1,0 +1,18 @@
+# Checked in on purpose: it holds no secrets. The MotherDuck token comes from MOTHERDUCK_TOKEN in
+# the environment (duckdb reads it itself). NGA_DESTINATION=duckdb points dbt at the local file
+# instead, which needs nothing. `nga transform` sets these variables for you.
+#
+# The local path is relative to dbt's working directory, which is this folder.
+nga:
+  target: "{{ env_var('DBT_TARGET', 'dev') }}"
+  outputs:
+    dev:
+      type: duckdb
+      path: "{{ ('md:' ~ env_var('NGA_MOTHERDUCK_DATABASE', 'next_gen_analytics')) if env_var('NGA_DESTINATION', 'motherduck') == 'motherduck' else env_var('NGA_WAREHOUSE', '../warehouse/nga.duckdb') }}"
+      schema: nga_dev
+      threads: 8
+    prod:
+      type: duckdb
+      path: "{{ ('md:' ~ env_var('NGA_MOTHERDUCK_DATABASE', 'next_gen_analytics')) if env_var('NGA_DESTINATION', 'motherduck') == 'motherduck' else env_var('NGA_WAREHOUSE', '../warehouse/nga.duckdb') }}"
+      schema: nga
+      threads: 8

@@ -1,0 +1,17 @@
+version: 2
+
+sources:
+  - name: frankfurter
+    description: >
+      ECB euro foreign-exchange reference rates from the Frankfurter API, landed by dlt into
+      raw_frankfurter. Published on ECB business days only.
+    schema: raw_frankfurter
+    loader: dlt
+    config:
+      loaded_at_field: "to_timestamp(cast(split_part(_dlt_load_id, '.', 1) as bigint))"
+      freshness:
+        warn_after: { count: 1, period: day }
+        error_after: { count: 3, period: day }
+    tables:
+      - name: rates
+        description: One row per quote currency per ECB business day.

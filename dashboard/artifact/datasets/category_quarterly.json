@@ -1,0 +1,14 @@
+{
+  "description": "Realised revenue per product category and quarter: the governed MetricFlow metric line_revenue_eur, as SQL compiled by MetricFlow (nga metrics query --metrics line_revenue_eur --group-by metric_time__quarter,product__category). Reads next_gen_analytics.nga_marts.fct_order_items and dim_products.",
+  "formerFile": "/_blob/92f1a1878ccd562b0b2cd525df6166f9",
+  "source": {
+    "args": {
+      "database": "next_gen_analytics",
+      "sql": "-- Revenue by category and quarter: compiled by MetricFlow from `nga metrics query --metrics line_revenue_eur --group-by metric_time__quarter,product__category`.\n-- Regenerate with `nga dashboard-sql`; do not edit by hand.\nSELECT\n  strftime(CAST(metric_time__quarter AS DATE), '%Y-%m-%d') AS metric_time__quarter\n  , product__category\n  , line_revenue_eur\nFROM (\n  SELECT\n    DATE_TRUNC('quarter', order_items_src_10000.order_date) AS metric_time__quarter\n    , products_src_10000.category AS product__category\n    , SUM(order_items_src_10000.realised_net_amount_eur) AS line_revenue_eur\n  FROM \"next_gen_analytics\".\"nga_marts\".\"fct_order_items\" order_items_src_10000\n  LEFT OUTER JOIN\n    \"next_gen_analytics\".\"nga_marts\".\"dim_products\" products_src_10000\n  ON\n    order_items_src_10000.product_id = products_src_10000.product_id\n  GROUP BY\n    DATE_TRUNC('quarter', order_items_src_10000.order_date)\n    , products_src_10000.category\n  ORDER BY metric_time__quarter, product__category\n) AS metricflow\nORDER BY metric_time__quarter, product__category"
+    },
+    "connector": "MotherDuck",
+    "kind": "query",
+    "tool": "query"
+  },
+  "title": "Revenue by category and quarter"
+}

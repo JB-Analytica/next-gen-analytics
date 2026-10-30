@@ -1,0 +1,40 @@
+# JB Analytica brand theme. The values come from the JB Analytica website stylesheet.
+extends: clarity
+
+notes: "Brand base board. Not rendered on its own -- boards pull it in with extends."
+
+style:
+  background: "#FFFFFF"     # --white, the card and page surface
+  accent: "#0C6EBA"         # --link-blue, the site's AA-safe interactive blue
+  muted: "#62748A"          # --ink-500, verified 4.5:1 on white and off-white
+  font:
+    family: "Poppins"
+    color: "#182333"        # --ink-900, the site's body colour
+  title:
+    font:
+      family: "Poppins"
+      color: "#071D3D"      # --navy
+      # clarity title-cases every heading. The site uses
+      # sentence case, so turn the transform off rather than restyle the prose to suit it.
+      case: none
+  text:
+    font:
+      family: "Poppins"
+  footer:
+    # The board is published under JB Analytica's own name; the vendor attribution goes.
+    visible: false
+  charts:
+    color:
+      categorical:
+        # Brand colours only, ordered so neighbouring series stay distinguishable.
+        palette:
+          - "#0A3866"  # --deep-blue
+          - "#FA9306"  # --orange
+          - "#2196F0"  # --bright-blue
+          - "#A15700"  # --orange-text
+          - "#A8C9EE"  # --light-blue
+          - "#071D3D"  # --navy
+          - "#0C6EBA"  # --link-blue
+          - "#C96E00"  # --orange-ink
+        single_series_palette:
+          - "#0A3866"  # --deep-blue

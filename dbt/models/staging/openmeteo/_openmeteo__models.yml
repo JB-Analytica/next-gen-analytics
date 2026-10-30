@@ -1,0 +1,28 @@
+version: 2
+
+models:
+  - name: stg_openmeteo__daily_weather
+    description: >
+      One row per country (its reference city) per day. Columns are renamed to carry their unit.
+    columns:
+      - name: weather_id
+        description: Primary key. Country code and date, e.g. BE-2026-03-14.
+        data_tests: [unique, not_null]
+      - name: country_code
+        description: ISO 3166-1 alpha-2 country the reference city represents.
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [BE, NL, DE, GB, CH]
+      - name: weather_date
+        description: Calendar day the observation covers.
+        data_tests: [not_null]
+      - name: rain_mm
+        description: Rain that fell during the day, in millimetres.
+      - name: precipitation_mm
+        description: Rain plus snow (water equivalent) during the day, in millimetres.
+      - name: sunshine_hours
+        description: Hours of sunshine during the day.
+      - name: dlt_load_id
+        description: dlt load package that last wrote the row (epoch seconds as text).

@@ -1,0 +1,20 @@
+# dbt-preflight: build and test changed models against synthetic data on every pull request.
+# See https://github.com/JB-Analytica/dbt-preflight -- paths are relative to this file.
+project_dir: dbt
+# The DBML that describes the source system. Remove the line to derive the schema from
+# sources.yml and the staging models instead.
+schema: source_system/noordkust.dbml
+rows: 200
+# Realistic fact-to-dimension ratios; keys are source table names.
+rows_for:
+  customers: 100
+  products: 30
+  orders: 500
+  order_items: 1100
+  returns: 60
+seed: 42
+locale: nl_BE
+conventions:
+  # The JB Analytica house rules at full strength. Without this block (dbt-preflight 0.4.0 and
+  # later) they only warn, as they do for any repo that never opted in.
+  preset: jba

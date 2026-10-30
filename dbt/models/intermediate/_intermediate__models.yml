@@ -1,0 +1,96 @@
+version: 2
+
+models:
+  - name: int_orders__fx_rates
+    description: >
+      One row per order with the euro conversion rate to use for it: the latest ECB rate on or
+      before the order date (EUR orders use 1). Rate is units of order currency per 1 EUR.
+    columns:
+      - name: order_id
+        description: Primary key. One row per order.
+        data_tests: [unique, not_null]
+      - name: fx_rate
+        description: Units of the order currency per 1 EUR.
+        data_tests: [not_null]
+
+  - name: int_order_items__returned
+    description: One row per order line that has at least one return event.
+    columns:
+      - name: order_item_id
+        description: Primary key. One row per returned order line.
+        data_tests: [unique, not_null]
+
+  - name: int_order_items__priced
+    description: >
+      One row per order line in the order's minor units, with order context, the line's
+      returned flag and the realised-money columns. Realised = not cancelled and not returned.
+    columns:
+      - name: order_item_id
+        description: Primary key. One row per order line.
+        data_tests: [unique, not_null]
+
+  - name: int_orders__items_aggregated
+    description: One row per order with its lines summed, in the order's minor units.
+    columns:
+      - name: order_id
+        description: Primary key. One row per order.
+        data_tests: [unique, not_null]
+
+  - name: int_holidays__by_country_date
+    description: >
+      Holidays flattened to one row per country per date. is_national is true when at least one
+      holiday that day applies to the whole country (it has no regional restriction).
+    columns:
+      - name: country_date_id
+        description: Primary key. Country code and date, e.g. BE-2026-07-21.
+        data_tests: [unique, not_null]
+      - name: is_national
+        description: True when a holiday that day applies to the whole country.
+        data_tests: [not_null]
+
+unit_tests:
+  - name: int_orders__fx_rates_takes_latest_rate_on_or_before_order_date
+    description: A Sunday order uses Friday's rate; a EUR order uses 1.
+    model: int_orders__fx_rates
+    given:
+      - input: ref('stg_noordkust__orders')
+        rows:
+          - {order_id: 1, currency: GBP, ordered_at: "2026-03-15 10:00:00"}
+          - {order_id: 2, currency: EUR, ordered_at: "2026-03-15 10:00:00"}
+          - {order_id: 3, currency: GBP, ordered_at: "2026-03-13 10:00:00"}
+      - input: ref('stg_frankfurter__rates')
+        rows:
+          - {rate_date: "2026-03-12", quote_currency: GBP, eur_rate: 0.80}
+          - {rate_date: "2026-03-13", quote_currency: GBP, eur_rate: 0.85}
+          - {rate_date: "2026-03-16", quote_currency: GBP, eur_rate: 0.90}
+    expect:
+      rows:
+        - {order_id: 1, fx_rate: 0.85, fx_rate_date: "2026-03-13"}
+        - {order_id: 2, fx_rate: 1.0, fx_rate_date: "2026-03-15"}
+        - {order_id: 3, fx_rate: 0.85, fx_rate_date: "2026-03-13"}
+
+  - name: int_order_items__priced_realised_excludes_cancelled_and_returned
+    description: Realised money is zero for a cancelled order and for a returned line.
+    model: int_order_items__priced
+    given:
+      - input: ref('stg_noordkust__order_items')
+        rows:
+          - {order_item_id: 1, order_id: 1, product_id: 1, quantity: 2, unit_price_minor: 1000, discount_minor: 100}
+          - {order_item_id: 2, order_id: 1, product_id: 2, quantity: 1, unit_price_minor: 500, discount_minor: 0}
+          - {order_item_id: 3, order_id: 2, product_id: 1, quantity: 1, unit_price_minor: 1000, discount_minor: 0}
+      - input: ref('stg_noordkust__orders')
+        rows:
+          - {order_id: 1, customer_id: 1, order_status: delivered, currency: EUR, shipping_country_code: BE, ordered_at: "2026-03-01 10:00:00"}
+          - {order_id: 2, customer_id: 1, order_status: cancelled, currency: EUR, shipping_country_code: BE, ordered_at: "2026-03-02 10:00:00"}
+      - input: ref('int_orders__fx_rates')
+        rows:
+          - {order_id: 1, fx_rate: 1.0}
+          - {order_id: 2, fx_rate: 1.0}
+      - input: ref('int_order_items__returned')
+        rows:
+          - {order_item_id: 2, return_count: 1}
+    expect:
+      rows:
+        - {order_item_id: 1, net_minor: 1900, realised_net_minor: 1900, sold_quantity: 2, returned_quantity: 0}
+        - {order_item_id: 2, net_minor: 500, realised_net_minor: 0, sold_quantity: 1, returned_quantity: 1}
+        - {order_item_id: 3, net_minor: 1000, realised_net_minor: 0, sold_quantity: 0, returned_quantity: 0}

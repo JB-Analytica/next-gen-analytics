@@ -1,0 +1,13 @@
+name: noordkust_charts
+
+# The dbt project is the source of truth for both halves of a board: the connection comes from
+# its `profiles.yml`, and every `ref()` is resolved against its `target/manifest.json`.
+dbt_project_dir: ../dbt
+
+sources:
+  warehouse:
+    type: dbt_profile
+    profile: nga
+    # prod, because that is where the marts live (schema nga_marts). The manifest must be parsed
+    # against the same target: see docs/dbt-charts.md.
+    target: prod

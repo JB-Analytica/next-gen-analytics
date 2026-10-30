@@ -1,0 +1,175 @@
+title: Noordkust KPIs
+extends: ./jba.yml
+source: warehouse
+
+text: |
+  The headline figures of the Claude KPI dashboard, drawn as a dbt Charts board. These numbers
+  are computed from the dbt marts (`nga_marts`) with plain SQL in this file, not through
+  MetricFlow. The SQL follows the metric definitions in `dbt/models/marts/_marts__metrics.yml`;
+  it does not read them, so a changed definition has to be changed here too. The data is
+  synthetic.
+
+queries:
+  headline:
+    notes: >
+      One row: the latest quarter that has orders. Realised revenue is realised_net_amount_eur,
+      orders are orders that were not cancelled, average order value is the first divided by the
+      second, and return rate is units returned per unit sold, by order date.
+    sql: |
+      with latest as (
+          select max(date_trunc('quarter', order_date)) as quarter_start
+          from {{ ref('fct_orders') }}
+      ),
+
+      orders as (
+          select
+              sum(realised_net_amount_eur)                       as realised_revenue_eur,
+              count(*) filter (where not is_cancelled)           as orders
+          from {{ ref('fct_orders') }}
+          where date_trunc('quarter', order_date) = (select quarter_start from latest)
+      ),
+
+      units as (
+          select
+              sum(returned_quantity)::double / nullif(sum(sold_quantity), 0) as return_rate
+          from {{ ref('fct_order_items') }}
+          where date_trunc('quarter', order_date) = (select quarter_start from latest)
+      )
+
+      select
+          (select quarter_start from latest)                      as quarter_start,
+          orders.realised_revenue_eur,
+          orders.orders,
+          orders.realised_revenue_eur / nullif(orders.orders, 0)  as average_order_value_eur,
+          units.return_rate
+      from orders, units
+
+  revenue_by_month_country: |
+    select
+        date_trunc('month', order_date) as month,
+        shipping_country_code           as shipping_country,
+        sum(realised_net_amount_eur)    as realised_revenue_eur
+    from {{ ref('fct_orders') }}
+    group by 1, 2
+    order by 1, 2
+
+  revenue_by_category:
+    notes: The last four quarters that have orders, as in the dashboard.
+    sql: |
+      select
+          p.category                          as category,
+          sum(i.realised_net_amount_eur)      as realised_revenue_eur
+      from {{ ref('fct_order_items') }} as i
+      left join {{ ref('dim_products') }} as p on i.product_id = p.product_id
+      where date_trunc('quarter', i.order_date) > (
+          select max(date_trunc('quarter', order_date)) - interval 12 month
+          from {{ ref('fct_order_items') }}
+      )
+      group by 1
+      order by realised_revenue_eur desc
+
+  rain_gear_by_weather:
+    notes: >
+      Rain gear realised revenue per country-day, rainy against dry. A rainy day has 1.0 mm of
+      rain or more in the country's reference city (is_rainy_day in the mart).
+    sql: |
+      select
+          country_code                                               as country,
+          case when is_rainy_day then 'Rainy' else 'Dry' end as day_type,
+          sum(rain_gear_realised_net_revenue_eur)
+              / nullif(count(*), 0)                                  as rain_gear_revenue_per_day_eur
+      from {{ ref('fct_daily_country_sales') }}
+      group by 1, 2
+      order by 1, 2 desc
+
+charts:
+  kpi_revenue:
+    type: kpi
+    query: headline
+    label: Realised revenue
+    value: realised_revenue_eur
+    style:
+      value:
+        format: { spec: ",.0f", prefix: "€" }
+
+  kpi_orders:
+    type: kpi
+    query: headline
+    label: Orders
+    value: orders
+    style:
+      value:
+        format: integer
+
+  kpi_aov:
+    type: kpi
+    query: headline
+    label: Average order value
+    value: average_order_value_eur
+    style:
+      value:
+        format: { spec: ",.2f", prefix: "€" }
+
+  kpi_return_rate:
+    type: kpi
+    query: headline
+    label: Return rate
+    value: return_rate
+    style:
+      value:
+        format: { spec: ".2%" }
+
+  revenue_by_month_chart:
+    type: bar
+    query: revenue_by_month_country
+    title: Realised revenue by month and shipping country
+    subtitle: Monthly totals, stacked by the country the order shipped to
+    x: month
+    y: realised_revenue_eur
+    color: shipping_country
+    y_label: "Realised revenue"
+    style:
+      orientation: vertical
+      stack: zero
+      axis_y:
+        labels:
+          format: { spec: ",.0f", prefix: "€" }
+
+  revenue_by_category_chart:
+    type: bar
+    query: revenue_by_category
+    title: Revenue by category
+    subtitle: Realised revenue over the last four quarters
+    x: category
+    y: realised_revenue_eur
+    y_label: "Realised revenue"
+    style:
+      orientation: horizontal
+      axis_y:
+        labels:
+          format: { spec: ",.0f", prefix: "€" }
+
+  rain_gear_chart:
+    type: bar
+    query: rain_gear_by_weather
+    title: Does rain sell rain gear?
+    subtitle: Rain gear revenue per day, rainy against dry days
+    x: country
+    y: rain_gear_revenue_per_day_eur
+    color: day_type
+    y_label: "Rain gear revenue per day"
+    style:
+      orientation: vertical
+      stack: none
+      axis_y:
+        labels:
+          format: { spec: ",.0f", prefix: "€" }
+
+rows:
+  - cols: [kpi_revenue, kpi_orders, kpi_aov, kpi_return_rate]
+  - text: |
+      Latest quarter with orders. Realised revenue excludes cancelled orders, returned lines and
+      shipping. Orders are those not cancelled. Return rate is units returned per unit sold.
+  - revenue_by_month_chart
+  - title: Where the revenue comes from
+    cols: [revenue_by_category_chart, rain_gear_chart]

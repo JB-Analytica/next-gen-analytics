@@ -1,0 +1,232 @@
+version: 2
+
+# MetricFlow semantic models over the marts. Metrics are defined once, in dbt (see
+# _marts__metrics.yml); answers and the KPI dashboard's SQL are compiled from them.
+
+semantic_models:
+  - name: orders
+    description: One row per order. Order counts and order-level revenue in euros.
+    model: ref('fct_orders')
+    defaults:
+      agg_time_dimension: order_date
+    entities:
+      - name: order
+        type: primary
+        expr: order_id
+      - name: customer
+        type: foreign
+        expr: customer_id
+    dimensions:
+      - name: order_date
+        type: time
+        type_params:
+          time_granularity: day
+      - name: order_status
+        type: categorical
+      - name: currency
+        type: categorical
+      - name: shipping_country
+        type: categorical
+        expr: shipping_country_code
+      - name: has_return
+        type: categorical
+    measures:
+      - name: orders_placed
+        description: Orders placed, cancelled ones included.
+        agg: count
+        expr: order_id
+      - name: orders_not_cancelled
+        description: Orders placed that were not cancelled.
+        agg: sum
+        expr: case when is_cancelled then 0 else 1 end
+      - name: orders_cancelled
+        description: Orders that were cancelled.
+        agg: sum
+        expr: case when is_cancelled then 1 else 0 end
+      - name: booked_revenue
+        description: Booked revenue in euros, as placed, shipping excluded.
+        agg: sum
+        expr: net_amount_eur
+      - name: realised_revenue
+        description: Realised revenue in euros, not cancelled and not returned, shipping excluded.
+        agg: sum
+        expr: realised_net_amount_eur
+      - name: shipping_revenue
+        description: Shipping fees charged, in euros.
+        agg: sum
+        expr: shipping_eur
+      - name: active_customers
+        description: Distinct customers with at least one order that was not cancelled.
+        agg: count_distinct
+        expr: case when is_cancelled then null else customer_id end
+
+  - name: order_items
+    description: One row per order line. Units sold and returned.
+    model: ref('fct_order_items')
+    defaults:
+      agg_time_dimension: order_date
+    entities:
+      - name: order_item
+        type: primary
+        expr: order_item_id
+      - name: order
+        type: foreign
+        expr: order_id
+      - name: product
+        type: foreign
+        expr: product_id
+      - name: customer
+        type: foreign
+        expr: customer_id
+    dimensions:
+      - name: order_date
+        type: time
+        type_params:
+          time_granularity: day
+      - name: order_status
+        type: categorical
+      - name: currency
+        type: categorical
+      - name: shipping_country
+        type: categorical
+        expr: shipping_country_code
+      - name: is_returned
+        type: categorical
+      - name: product_category
+        type: categorical
+    measures:
+      - name: units_sold
+        description: Units sold; cancelled orders excluded, returned units included.
+        agg: sum
+        expr: sold_quantity
+      - name: units_returned
+        description: Units on lines that were returned.
+        agg: sum
+        expr: returned_quantity
+      - name: line_realised_revenue
+        description: Realised revenue in euros summed over order lines.
+        agg: sum
+        expr: realised_net_amount_eur
+
+  - name: returns
+    description: One row per return event.
+    model: ref('fct_returns')
+    defaults:
+      agg_time_dimension: return_date
+    entities:
+      - name: return
+        type: primary
+        expr: return_id
+      - name: order_item
+        type: foreign
+        expr: order_item_id
+      - name: customer
+        type: foreign
+        expr: customer_id
+      - name: product
+        type: foreign
+        expr: product_id
+    dimensions:
+      - name: return_date
+        type: time
+        type_params:
+          time_granularity: day
+      - name: return_reason
+        type: categorical
+      - name: shipping_country
+        type: categorical
+        expr: shipping_country_code
+    measures:
+      - name: return_events
+        description: Return events recorded.
+        agg: count
+        expr: return_id
+      - name: refunded_amount
+        description: Euros refunded across return events.
+        agg: sum
+        expr: refund_amount_eur
+
+  - name: customers
+    description: One row per customer.
+    model: ref('dim_customers')
+    defaults:
+      agg_time_dimension: created_date
+    entities:
+      - name: customer
+        type: primary
+        expr: customer_id
+    dimensions:
+      - name: created_date
+        type: time
+        type_params:
+          time_granularity: day
+      - name: country
+        type: categorical
+        expr: country_code
+      - name: is_marketing_opt_in
+        type: categorical
+    measures:
+      - name: new_customers_count
+        description: Customer accounts created.
+        agg: count
+        expr: customer_id
+
+  - name: products
+    description: One row per product. Dimensions only, joined to order lines by product.
+    model: ref('dim_products')
+    entities:
+      - name: product
+        type: primary
+        expr: product_id
+    dimensions:
+      - name: category
+        type: categorical
+      - name: product_name
+        type: categorical
+      - name: is_active
+        type: categorical
+
+  - name: daily_country_sales
+    description: One row per country per day, with sales, weather and holidays.
+    model: ref('fct_daily_country_sales')
+    defaults:
+      agg_time_dimension: date_day
+    entities:
+      - name: country_day
+        type: primary
+        expr: country_day_id
+    dimensions:
+      - name: date_day
+        type: time
+        type_params:
+          time_granularity: day
+      - name: country
+        type: categorical
+        expr: country_code
+      - name: is_rainy_day
+        type: categorical
+      - name: is_holiday
+        type: categorical
+      - name: is_weekend
+        type: categorical
+    measures:
+      - name: country_days
+        description: Country-days observed.
+        agg: count
+        expr: country_day_id
+      - name: rainy_country_days
+        description: Country-days with rain at or above the rainy-day threshold.
+        agg: sum
+        expr: case when is_rainy_day then 1 else 0 end
+      - name: daily_realised_revenue
+        description: Realised revenue in euros summed over country-days.
+        agg: sum
+        expr: realised_net_revenue_eur
+      - name: daily_rain_gear_revenue
+        description: Realised rain_gear revenue in euros summed over country-days.
+        agg: sum
+        expr: rain_gear_realised_net_revenue_eur
+      - name: rain_mm_total
+        description: Rain in millimetres summed over country-days.
+        agg: sum
+        expr: rain_mm

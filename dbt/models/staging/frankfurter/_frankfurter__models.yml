@@ -1,0 +1,23 @@
+version: 2
+
+models:
+  - name: stg_frankfurter__rates
+    description: One row per quote currency per ECB business day.
+    columns:
+      - name: rate_id
+        description: Primary key. Quote currency and date, e.g. GBP-2026-03-13.
+        data_tests: [unique, not_null]
+      - name: rate_date
+        description: ECB business day the rate was published for.
+        data_tests: [not_null]
+      - name: quote_currency
+        description: The currency priced in euro.
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [GBP, CHF]
+      - name: eur_rate
+        description: Units of the quote currency per 1 EUR.
+        data_tests: [not_null]
+      - name: dlt_load_id
+        description: dlt load package that last wrote the row (epoch seconds as text).
