@@ -62,6 +62,13 @@ All four front ends run on the same dbt project and the same MotherDuck database
 | **Lightdash** | MetricFlow metrics, translated on deploy (all 29 here) | self-serve BI: any dimension on any metric | compiles offline; deploying needs a Lightdash project | [`docs/lightdash.md`](docs/lightdash.md) |
 | **dbt Charts** | the marts through `ref()`, not MetricFlow (yet) | static, branded boards with no account and no server | renders locally | [`docs/dbt-charts.md`](docs/dbt-charts.md) |
 
+### What the dbt Charts board looks like
+
+[`charts/noordkust_kpis.yml`](charts/noordkust_kpis.yml), rendered from the local warehouse with
+`dct render`. It's one self-contained HTML file, with no server and no account:
+
+![dbt Charts board: Q3 2026 realised revenue €814,507, 4,665 orders, €174.60 average order value, 5.15% return rate; monthly revenue by shipping country; revenue by category; rain gear revenue on rainy and dry days by country](docs/screenshots/dbt-charts.png)
+
 ## Known limits
 
 - **dbt Charts repeats the metric logic.** It has no Semantic Layer connection, so the board

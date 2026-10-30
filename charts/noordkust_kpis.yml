@@ -57,10 +57,14 @@ queries:
     notes: The last four quarters that have orders, as in the dashboard.
     sql: |
       select
-          p.category                          as category,
+          -- readable labels; 'Cycling apparel' is shortened because dct clips long axis labels
+          case i.product_category
+              when 'cycling_apparel' then 'Cycling kit'
+              else upper(left(i.product_category, 1))
+                  || replace(substr(i.product_category, 2), '_', ' ')
+          end                                 as category,
           sum(i.realised_net_amount_eur)      as realised_revenue_eur
       from {{ ref('fct_order_items') }} as i
-      left join {{ ref('dim_products') }} as p on i.product_id = p.product_id
       where date_trunc('quarter', i.order_date) > (
           select max(date_trunc('quarter', order_date)) - interval 12 month
           from {{ ref('fct_order_items') }}
