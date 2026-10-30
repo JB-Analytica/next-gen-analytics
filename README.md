@@ -59,15 +59,28 @@ All four front ends run on the same dbt project and the same MotherDuck database
 |---|---|---|---|---|
 | **Claude dashboard** | SQL compiled by MetricFlow, live on Claude's MotherDuck connector | a small team that already uses Claude | running | [`dashboard/README.md`](dashboard/README.md) |
 | **Claude answers** | `nga metrics query` (MetricFlow) | ad-hoc questions with governed answers | running | [the skill](.claude/skills/answering-with-metricflow/SKILL.md) |
-| **Lightdash** | MetricFlow metrics, translated on deploy (all 29 here) | self-serve BI: any dimension on any metric | compiles offline; deploying needs a Lightdash project | [`docs/lightdash.md`](docs/lightdash.md) |
+| **Lightdash** | MetricFlow metrics, translated on deploy (all 29 here) | self-serve BI: any dimension on any metric | running on Lightdash Cloud | [`docs/lightdash.md`](docs/lightdash.md) |
 | **dbt Charts** | the marts through `ref()`, not MetricFlow (yet) | static, branded boards with no account and no server | renders locally | [`docs/dbt-charts.md`](docs/dbt-charts.md) |
 
-### What the dbt Charts board looks like
+### What they look like
 
-[`charts/noordkust_kpis.yml`](charts/noordkust_kpis.yml), rendered from the local warehouse with
-`dct render`. It's one self-contained HTML file, with no server and no account:
+The same quarter in each front end: Q3 2026 realised revenue €814,507 from 4,665 orders, €174.60
+per order and a 5.15% return rate.
 
-![dbt Charts board: Q3 2026 realised revenue €814,507, 4,665 orders, €174.60 average order value, 5.15% return rate; monthly revenue by shipping country; revenue by category; rain gear revenue on rainy and dry days by country](docs/screenshots/dbt-charts.png)
+**Claude dashboard**, live on MotherDuck through MetricFlow-compiled SQL
+([`dashboard/`](dashboard/)):
+
+![Claude dashboard: four KPI tiles with the change on the quarter before, and realised revenue by month stacked by shipping country](docs/screenshots/claude-dashboard.png)
+
+**Lightdash**, with every chart on a metric translated from MetricFlow
+([`lightdash/`](lightdash/)); this is Lightdash's own dashboard export:
+
+![Lightdash dashboard: four big numbers with the change on the quarter before, revenue by month and country, revenue by category, rain gear share of revenue by quarter, and rain gear revenue on dry and rainy days](docs/screenshots/lightdash.png)
+
+**dbt Charts**, one self-contained HTML file rendered by `dct render` from
+[`charts/noordkust_kpis.yml`](charts/noordkust_kpis.yml):
+
+![dbt Charts board: the four headline figures, monthly revenue by shipping country, revenue by category, and rain gear revenue on rainy and dry days](docs/screenshots/dbt-charts.png)
 
 ## Known limits
 

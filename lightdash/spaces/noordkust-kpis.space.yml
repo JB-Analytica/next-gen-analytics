@@ -1,0 +1,9 @@
+access:
+  groups: []
+  inheritParentPermissions: true
+  projectMemberAccessRole: null
+  users: []
+contentType: space
+slug: noordkust-kpis
+spaceName: Noordkust KPIs
+version: 1

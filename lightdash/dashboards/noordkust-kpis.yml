@@ -1,0 +1,124 @@
+contentType: dashboard
+description: The Noordkust headline KPIs on MetricFlow metrics translated by Lightdash.
+filters:
+  dimensions: []
+  metrics: []
+  tableCalculations: []
+name: Noordkust KPIs
+slug: noordkust-kpis
+spaceSlug: noordkust-kpis
+tabs: []
+tiles:
+  - h: 2
+    properties:
+      content: >-
+        ## Noordkust KPIs
+
+
+        Every figure is a dbt MetricFlow metric, translated by Lightdash on
+        deploy. Synthetic shop data, as of 1 October 2026.
+      hideFrame: true
+      title: ""
+    tabSlug: null
+    type: markdown
+    w: 36
+    x: 0
+    "y": 0
+  - h: 4
+    properties:
+      chartName: Realised revenue
+      chartSlug: realised-revenue
+      hideTitle: false
+      title: Realised revenue
+    tabSlug: null
+    tileSlug: realised-revenue
+    type: saved_chart
+    w: 9
+    x: 0
+    "y": 2
+  - h: 4
+    properties:
+      chartName: Orders
+      chartSlug: orders
+      hideTitle: false
+      title: Orders
+    tabSlug: null
+    tileSlug: orders
+    type: saved_chart
+    w: 9
+    x: 9
+    "y": 2
+  - h: 4
+    properties:
+      chartName: Average order value
+      chartSlug: average-order-value
+      hideTitle: false
+      title: Average order value
+    tabSlug: null
+    tileSlug: average-order-value
+    type: saved_chart
+    w: 9
+    x: 18
+    "y": 2
+  - h: 4
+    properties:
+      chartName: Return rate
+      chartSlug: return-rate
+      hideTitle: false
+      title: Return rate
+    tabSlug: null
+    tileSlug: return-rate
+    type: saved_chart
+    w: 9
+    x: 27
+    "y": 2
+  - h: 9
+    properties:
+      chartName: Realised revenue by month and shipping country
+      chartSlug: revenue-by-month-and-country
+      hideTitle: false
+      title: Realised revenue by month and shipping country
+    tabSlug: null
+    tileSlug: revenue-by-month-and-country
+    type: saved_chart
+    w: 36
+    x: 0
+    "y": 6
+  - h: 8
+    properties:
+      chartName: Revenue by category
+      chartSlug: revenue-by-category
+      hideTitle: false
+      title: Revenue by category
+    tabSlug: null
+    tileSlug: revenue-by-category
+    type: saved_chart
+    w: 12
+    x: 0
+    "y": 15
+  - h: 8
+    properties:
+      chartName: Rain gear share of revenue
+      chartSlug: rain-gear-share-by-quarter
+      hideTitle: false
+      title: Rain gear share of revenue
+    tabSlug: null
+    tileSlug: rain-gear-share-by-quarter
+    type: saved_chart
+    w: 12
+    x: 12
+    "y": 15
+  - h: 8
+    properties:
+      chartName: Does rain sell rain gear?
+      chartSlug: rain-gear-rainy-vs-dry
+      hideTitle: false
+      title: Does rain sell rain gear?
+    tabSlug: null
+    tileSlug: rain-gear-rainy-vs-dry
+    type: saved_chart
+    w: 12
+    x: 24
+    "y": 15
+verification: null
+version: 1

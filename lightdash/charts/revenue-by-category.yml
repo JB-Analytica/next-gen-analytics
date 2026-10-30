@@ -1,0 +1,56 @@
+chartConfig:
+  config:
+    eChartsConfig:
+      legend:
+        show: false
+    layout:
+      flipAxes: true
+      xField: fct_order_items_product_category
+      yField:
+        - fct_order_items_line_revenue_eur
+  type: cartesian
+contentType: chart
+description: Realised revenue over the last four quarters.
+metricQuery:
+  additionalMetrics: []
+  customDimensions: []
+  dimensions:
+    - fct_order_items_product_category
+  exploreName: fct_order_items
+  filters:
+    dimensions:
+      and:
+        - id: 88418a49-c097-5592-beca-426b43782862
+          operator: inBetween
+          target:
+            fieldId: fct_order_items_order_date
+          values:
+            - "2025-10-01"
+            - "2026-09-30"
+      id: 8620f27f-f104-51ef-9352-e7edc9a7ac42
+  limit: 500
+  metricOverrides:
+    fct_order_items_line_revenue_eur:
+      formatOptions:
+        compact: thousands
+        currency: EUR
+        round: 0
+        separator: commaPeriod
+        type: currency
+  metrics:
+    - fct_order_items_line_revenue_eur
+  sorts:
+    - descending: false
+      fieldId: fct_order_items_line_revenue_eur
+  tableCalculations: []
+  timezone: project_timezone
+name: Revenue by category
+slug: revenue-by-category
+spaceSlug: noordkust-kpis
+tableConfig:
+  columnOrder:
+    - fct_order_items_product_category
+    - fct_order_items_line_revenue_eur
+tableName: fct_order_items
+verification: null
+version: 1

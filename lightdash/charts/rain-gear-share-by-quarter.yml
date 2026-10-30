@@ -1,0 +1,62 @@
+chartConfig:
+  config:
+    eChartsConfig:
+      legend:
+        show: false
+      series:
+        - encode:
+            xRef:
+              field: fct_order_items_order_date_quarter
+            yRef:
+              field: fct_order_items_rain_gear_share_of_revenue
+          type: line
+          yAxisIndex: 0
+      yAxis:
+        - min: "0"
+    layout:
+      xField: fct_order_items_order_date_quarter
+      yField:
+        - fct_order_items_rain_gear_share_of_revenue
+  type: cartesian
+contentType: chart
+description: Share of realised revenue from rain gear, per quarter.
+metricQuery:
+  additionalMetrics: []
+  customDimensions: []
+  dimensions:
+    - fct_order_items_order_date_quarter
+  exploreName: fct_order_items
+  filters:
+    dimensions:
+      and:
+        - id: 88418a49-c097-5592-beca-426b43782862
+          operator: inBetween
+          target:
+            fieldId: fct_order_items_order_date
+          values:
+            - "2025-10-01"
+            - "2026-09-30"
+      id: 8620f27f-f104-51ef-9352-e7edc9a7ac42
+  limit: 500
+  metricOverrides:
+    fct_order_items_rain_gear_share_of_revenue:
+      formatOptions:
+        round: 1
+        type: percent
+  metrics:
+    - fct_order_items_rain_gear_share_of_revenue
+  sorts:
+    - descending: false
+      fieldId: fct_order_items_order_date_quarter
+  tableCalculations: []
+  timezone: project_timezone
+name: Rain gear share of revenue
+slug: rain-gear-share-by-quarter
+spaceSlug: noordkust-kpis
+tableConfig:
+  columnOrder:
+    - fct_order_items_order_date_quarter
+    - fct_order_items_rain_gear_share_of_revenue
+tableName: fct_order_items
+verification: null
+version: 1

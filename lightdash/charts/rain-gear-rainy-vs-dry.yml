@@ -1,0 +1,54 @@
+chartConfig:
+  config:
+    eChartsConfig:
+      legend:
+        orient: horizontal
+        show: true
+    layout:
+      xField: fct_daily_country_sales_country_code
+      yField:
+        - fct_daily_country_sales_rain_gear_revenue_per_dry_day_eur
+        - fct_daily_country_sales_rain_gear_revenue_per_rainy_day_eur
+  type: cartesian
+contentType: chart
+description: Rain gear revenue per day, dry against rainy days, by country.
+metricQuery:
+  additionalMetrics: []
+  customDimensions: []
+  dimensions:
+    - fct_daily_country_sales_country_code
+  exploreName: fct_daily_country_sales
+  filters: {}
+  limit: 500
+  metricOverrides:
+    fct_daily_country_sales_rain_gear_revenue_per_dry_day_eur:
+      formatOptions:
+        currency: EUR
+        round: 0
+        separator: commaPeriod
+        type: currency
+    fct_daily_country_sales_rain_gear_revenue_per_rainy_day_eur:
+      formatOptions:
+        currency: EUR
+        round: 0
+        separator: commaPeriod
+        type: currency
+  metrics:
+    - fct_daily_country_sales_rain_gear_revenue_per_dry_day_eur
+    - fct_daily_country_sales_rain_gear_revenue_per_rainy_day_eur
+  sorts:
+    - descending: false
+      fieldId: fct_daily_country_sales_country_code
+  tableCalculations: []
+  timezone: project_timezone
+name: Does rain sell rain gear?
+slug: rain-gear-rainy-vs-dry
+spaceSlug: noordkust-kpis
+tableConfig:
+  columnOrder:
+    - fct_daily_country_sales_country_code
+    - fct_daily_country_sales_rain_gear_revenue_per_dry_day_eur
+    - fct_daily_country_sales_rain_gear_revenue_per_rainy_day_eur
+tableName: fct_daily_country_sales
+verification: null
+version: 1

@@ -16,3 +16,12 @@ nga:
       path: "{{ ('md:' ~ env_var('NGA_MOTHERDUCK_DATABASE', 'next_gen_analytics')) if env_var('NGA_DESTINATION', 'motherduck') == 'motherduck' else env_var('NGA_WAREHOUSE', '../warehouse/nga.duckdb') }}"
       schema: nga
       threads: 8
+    # For `lightdash deploy` only: the Lightdash CLI reads the MotherDuck token from the profile,
+    # not from the environment, to fetch column types. Same database and schema as prod.
+    lightdash:
+      type: duckdb
+      path: "md:{{ env_var('NGA_MOTHERDUCK_DATABASE', 'next_gen_analytics') }}"
+      schema: nga
+      threads: 8
+      settings:
+        motherduck_token: "{{ env_var('MOTHERDUCK_TOKEN', '') }}"

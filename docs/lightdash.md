@@ -6,9 +6,9 @@ MetricFlow YAML (`dbt/models/marts/_marts__semantic_models.yml` and `_marts__met
 On deploy, Lightdash's CLI translates them into Lightdash metrics. There is no second copy of
 a definition to keep in step.
 
-This page was checked against `@lightdash/cli` 3.109.0, dbt Core 1.12.6 and dbt-duckdb 1.11.1.
-The compile step below was run offline; connecting, deploying and the dashboard need a
-Lightdash project and were not run.
+This page was checked against `@lightdash/cli` 3.109.0, dbt Core 1.12.6 and dbt-duckdb 1.11.1,
+on Lightdash Cloud against the MotherDuck prod marts. Every chart in `lightdash/` returns the
+same figures as MetricFlow.
 
 ## How the translation works
 
@@ -119,21 +119,37 @@ Python environment on `PATH` first so the CLI finds this repo's `dbt` (not a she
 # once: log in with a personal access token (Lightdash, Settings, Personal access tokens)
 npx -y @lightdash/cli@3.109.0 login https://<your-instance> --token <token>
 
-# build the marts first (Orchestra does this on a schedule; see orchestra.md)
-export MOTHERDUCK_TOKEN=<read/write token>   # dbt's profile reads this
-
-# deploy only the marts; the first time, create the project instead of --project
+# first time only: create the project without sending any warehouse credentials, then
+# connect MotherDuck in the Lightdash UI (see above) with a read-only token
 PATH="$PWD/.venv/bin:$PATH" npx -y @lightdash/cli@3.109.0 deploy \
   --project-dir dbt --profiles-dir dbt --target prod \
-  --select tag:bi --assume-yes \
-  --project <project uuid or slug>          # first deploy: --create "Noordkust"
+  --create "Noordkust" --no-warehouse-credentials --assume-yes
+
+# every deploy: the marts only, with column types read from MotherDuck
+export MOTHERDUCK_TOKEN=<token>             # stays local; the CLI reads it through the profile
+PATH="$PWD/.venv/bin:$PATH" npx -y @lightdash/cli@3.109.0 deploy \
+  --project-dir dbt --profiles-dir dbt --target lightdash \
+  --select tag:bi --assume-yes --project <project uuid>
 ```
 
+- `--create ... --no-warehouse-credentials` makes the project without uploading the
+  token from your profile. It can't be combined with `--select`, so the first deploy also
+  ships the staging models; the next deploy with `--select tag:bi` replaces them.
+- `--target lightdash` is a dbt target in `dbt/profiles.yml` with the same database and
+  schema as `prod`. The Lightdash CLI only finds a MotherDuck token in the profile's
+  `settings.motherduck_token`, not in the environment the way dbt does. With `--target prod`
+  the deploy stops at "MotherDuck duckdb targets require settings.motherduck_token".
+- Don't deploy with `--skip-warehouse-catalog`. Without the catalog, CLI 3.109.0 replaces each
+  column's YAML `data_type` with nothing, so every column becomes a string. Dates then get
+  no month or quarter fields, and date filters fail with "No function has been implemented to
+  render SQL for the filter operator". Only `meta.dimension.type` survives a skipped catalog.
 - `--select tag:bi` exposes only the marts, the models `dbt_project.yml` tags `bi`. Staging
   and intermediate models never reach Lightdash.
 - `--assume-yes` stops the CLI prompting (it hangs forever in CI otherwise), and `--project`
-  stops it deploying to a stale default project. `--create` prints the new project's UUID.
-- Without a warehouse connection, the same translation can be run offline:
+  stops it deploying to the CLI's current default project, which `--create` switches to the
+  new one.
+- The MetricFlow translation alone can be checked offline, with no account (skipping the
+  catalog is fine here, because it only affects column types):
 
   ```bash
   NGA_DESTINATION=duckdb PATH="$PWD/.venv/bin:$PATH" npx -y @lightdash/cli@3.109.0 compile \
@@ -142,8 +158,7 @@ PATH="$PWD/.venv/bin:$PATH" npx -y @lightdash/cli@3.109.0 deploy \
   ```
 
   Expected: `Translated 29 MetricFlow metric(s)`, no skips, and `Compiled 7
-  explores, SUCCESS=7 ERRORS=0`. This needs the local warehouse file only for `dbt ls`. The
-  CLI also makes an unauthenticated version call to Lightdash Cloud (`--no-version-check`).
+  explores, SUCCESS=7 ERRORS=0`. This needs the local warehouse file only for `dbt ls`.
 - To review a change before it reaches the shared project, use a preview project:
   `lightdash start-preview --name <branch> ...`, then `lightdash stop-preview`.
 - Redeploy after every change to the metrics or marts YAML. For a Git-connected project,
@@ -164,14 +179,7 @@ PATH="$PWD/.venv/bin:$PATH" npx -y @lightdash/cli@3.109.0 deploy \
 
 ## The dashboard
 
-`lightdash/README.md` describes the charts that mirror the Claude KPI dashboard
-(`dashboard/`) and which explore and fields each uses. They are built in the Lightdash UI once
-and then kept as code with `lightdash download` and `lightdash upload` (see that file). No chart
-or dashboard YAML is committed: the format is meant to be produced by `download`, and it
-cannot be run or checked without a project.
-
-## Needs a Lightdash account
-
-Everything below the compile step: creating the project, the MotherDuck connection, the deploy,
-checking the translated metrics in the explores, building the dashboard, and `lightdash
-download`. Cloud has a free trial; self-hosted is the open-source image.
+`lightdash/` holds the Noordkust KPIs dashboard, its eight charts and its space, as written
+by `lightdash download`. `lightdash/README.md` lists the charts and how to upload them to a
+project. Each one queries MotherDuck live through the translated metrics. The screenshot in the
+repository README is Lightdash's own dashboard export.

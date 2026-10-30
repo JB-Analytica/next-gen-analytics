@@ -65,6 +65,9 @@ DBT_TARGET=prod uv run nga dashboard-sql          # after any change to a metric
   filter that uses another model's dimension (`product__category` on an order-line metric). Put
   the column on the fact instead, as `fct_order_items.product_category` is. Then check that
   `lightdash compile --verbose` still reports all 29 translated; see `docs/lightdash.md`.
+- **Deploy to Lightdash with `--target lightdash`, never `--skip-warehouse-catalog`.** The CLI only
+  reads the MotherDuck token from the profile, and a skipped catalog turns every column into a
+  string (no month or quarter fields). `docs/lightdash.md` has the commands.
 
 - **`mf` does not parse the dbt project**: it reads `dbt/target/semantic_manifest.json` as the last
   dbt command left it, which names that run's warehouse. `nga metrics` and `nga dashboard-sql`
